@@ -1,22 +1,20 @@
 <script>
-    import { Avatar } from "melt/builders";
-
-    const avatar = new Avatar({
-        src: "https://api.screenlist.co.za/storage/umjolo-the-gone-girl-jpeg1728754895410optmsd",
-    });
+    import { House } from "@lucide/svelte";
 </script>
+<div class="flex flex-col justify-items-start items-center p-4">
+    <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
+        <div class="card-body">
+            <h1 class="card-title">Maritime waters await...</h1>
+            <fieldset class="fieldset">
+                <label for="passphrase" class="label">Passphrase</label>
+                <input name="passphrase" type="password" class="input w-full" placeholder="...all you need is six words" />
+            </fieldset>
+            <div class="card-actions flex-col">
+                <button class="btn btn-primary mt-4 w-full">Enter</button>
+                <div class="divider">OR</div>
+                <a href="/canal/generate" class="btn btn-outline w-full">Generate a new canal</a>
+            </div>
+        </div>
+    </div>
+</div>
 
-<h1>Welcome to SvelteKit</h1>
-<p>
-    Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the
-    documentation
-</p>
-
-<img {...avatar.image} alt="Avatar" />
-<span {...avatar.fallback}>RH</span>
-
-<style>
-    [data-melt-avatar-image] {
-        width: 200px;
-    }
-</style>
