@@ -21,7 +21,8 @@
   <slot/>
 </main>
 <footer class="footer sm:footer-horizontal footer-center text-base-content p-4">
-  <div>
+  <aside>
+    <img class="mb-4" src="/logo-light.svg" alt="Elela logo" width="100px" />
     <span>Made with ❤️ in Braamfontein, Johannesburg</span>
-  </div>
+  </aside>
 </footer>
