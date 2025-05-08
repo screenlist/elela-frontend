@@ -1,6 +1,6 @@
 <div class="flex flex-col justify-baseline items-center sm:flex-row sm:items-stretch sm:justify-center">
   <div class="card mt-4 sm:m-4 max-w-sm w-1/2 min-w-xs bg-base-300 shadow-sm">
-    <div class="card-body sm:justify-between">
+    <section class="card-body sm:justify-between">
       <div class="flex justify-between">
         <h2 class="text-3xl font-bold">Free</h2>
       </div>
@@ -11,7 +11,7 @@
         </li>
         <li>
           <svg xmlns="http://www.w3.org/2000/svg" class="size-4 me-2 inline-block text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-          <span>Valid for 7 days</span>
+          <span>Valid for 3 days</span>
         </li>
         <li>
           <svg xmlns="http://www.w3.org/2000/svg" class="size-4 me-2 inline-block text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
@@ -23,12 +23,12 @@
         </li>
       </ul>
       <div class="mt-6">
-        <button class="btn btn-outline btn-block">Generate</button>
+        <a href="/canal/generate/phrase" class="btn btn-outline btn-block">Generate</a>
       </div>
-    </div>
+    </section>
   </div>
   <div class="card mt-4 sm:m-4 max-w-sm w-1/2 min-w-xs bg-base-300 shadow-sm">
-    <div class="card-body sm:justify-between">
+    <section class="card-body sm:justify-between">
       <div class="flex justify-between">
         <h2 class="text-3xl font-bold">Premium</h2>
         <span class="text-xl">$1.39</span>
@@ -70,6 +70,6 @@
       <div class="mt-6">
         <button class="btn btn-primary btn-block">Buy</button>
       </div>
-    </div>
+    </section>
   </div>
 </div>
