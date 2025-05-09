@@ -3,30 +3,29 @@
     import { enhance } from '$app/forms'
 
     let { data, form } = $props()
-    console.log(data)
 </script>
 <div class="flex flex-col justify-items-start items-center p-4">
     {#if data?.logged_in === false}
-        <div class="card card-border card-sm bg-base-300 max-w-sm w-full min-w-xs">
-            <form class="card-body" method="POST" action="?/auth" use:enhance>
-                <h1 class="card-title uppercase">Canal</h1>
-                {#if form?.autherror}
-                    <div role="alert" class="alert alert-soft alert-error">
-                        <Info />
-                        <span>{form.autherror}</span>
-                    </div>
-                {/if}
-                <fieldset class="fieldset">
-                    <label for="passphrase" class="label">Passphrase</label>
-                    <input name="passphrase" type="password" class="input w-full" placeholder="all you need is six words" />
-                </fieldset>
-                <div class="card-actions flex-col">
-                    <button type="submit" class="btn btn-primary mt-4 w-full">Enter the waters</button>
-                    <div class="divider">OR</div>
-                    <a href="/canal/generate" class="btn btn-outline w-full">Generate a new canal</a>
-                </div>
-            </form>
-        </div>
+      <div class="card card-border card-sm bg-base-300 max-w-sm w-full min-w-xs">
+        <form class="card-body" method="POST" action="?/auth" use:enhance>
+          <h1 class="card-title uppercase">Canal</h1>
+          {#if form?.autherror}
+            <div role="alert" class="alert alert-soft alert-error">
+              <Info />
+              <span>{form.autherror}</span>
+            </div>
+          {/if}
+          <fieldset class="fieldset">
+            <label for="passphrase" class="label">Passphrase</label>
+            <input name="passphrase" type="password" class="input w-full" placeholder="all you need is six words" />
+          </fieldset>
+          <div class="card-actions flex-col">
+            <button type="submit" class="btn btn-primary mt-4 w-full">Enter the waters</button>
+            <div class="divider">OR</div>
+            <a href="/canal/generate" class="btn btn-outline w-full">Generate a new canal</a>
+          </div>
+        </form>
+      </div>
     {:else if data?.logged_in === true}
       <div class="card card-border card-sm bg-base-300 max-w-sm w-full min-w-xs">
         <section class="card-body flex-row justify-between">
