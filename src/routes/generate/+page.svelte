@@ -23,7 +23,7 @@
         </li>
       </ul>
       <div class="mt-6">
-        <a href="/canal/generate/phrase" class="btn btn-outline btn-block">Generate</a>
+        <a href="/generate/phrase" class="btn btn-outline btn-block">Generate</a>
       </div>
     </section>
   </div>
@@ -68,7 +68,7 @@
         </li>
       </ul>
       <div class="mt-6">
-        <button class="btn btn-primary btn-block">Buy</button>
+        <a href="/generate/buy" class="btn btn-primary btn-block">Buy</a>
       </div>
     </section>
   </div>
