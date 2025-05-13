@@ -5,8 +5,11 @@
   import '@fontsource-variable/biorhyme'
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
+  import { page } from '$app/state'
   import { decodeJwt } from 'jose'
   import { PUBLIC_SERVER } from '$env/static/public'
+  import { setupSessionTimers, clearSessionTimers } from '$lib/session'
+  import { session } from '$lib/expiry.svelte'
 
   let { children } = $props()
 
@@ -18,19 +21,20 @@
 
   let sessionWarningDialog
   let warningOnceOpened = $state(false)
-  let sessionExpiry = new Date()
 
-  async function trackSession(expiry){
-    const difference = new Date(expiry) - new Date()
-    if(difference < 1000*60*1 && warningOnceOpened ===  false){
-      sessionWarningDialog.showModal()
-      warningOnceOpened = true
-    }
-    if(difference < 0){
-      await fetch(`/canal/settings/logout`, {
-        method: 'POST'
-      })
-      goto('/')
+  function onWarning(){
+    sessionWarningDialog.showModal()
+    warningOnceOpened = true
+  }
+
+  async function onExpiry(){
+    await fetch(`/canal/settings/logout`, { method: 'POST' })
+    goto('/')
+    session.expiry = null
+    clearSessionTimers()
+    if(warningOnceOpened){
+      sessionWarningDialog.close()
+      warningOnceOpened = false
     }
   }
 
@@ -39,12 +43,13 @@
       method: 'POST'
     })
 
-    const session = getCookie('canal_session')
-    if(session){
-      const valid = await fetch(`${PUBLIC_SERVER}/canal/session/poll?id=${session}`)
+    const sid = getCookie('canal_session')
+    if(sid){
+      const valid = await fetch(`${PUBLIC_SERVER}/canal/session/poll?id=${sid}`)
       if(valid.ok){
         const data = await valid.json()
-        sessionExpiry = data.expires_at
+        session.expiry = new Date(data.expires_at)
+        await setupSessionTimers(session.expiry, { onWarning, onExpiry })
       }
     }
 
@@ -52,23 +57,36 @@
     sessionWarningDialog.close()
   }
 
-  onMount(async () => { 
-    const session = getCookie('canal_session') 
-    if(session){
-      const valid = await fetch(`${PUBLIC_SERVER}/canal/session/poll?id=${session}`)
-      if(valid.ok){
-        const data = await valid.json()
-        sessionExpiry = data.expires_at
+  // onMount(async () => { 
+  //   const sid = getCookie('canal_session') 
+
+  //   if(sid){
+  //     const valid = await fetch(`${PUBLIC_SERVER}/canal/session/poll?id=${sid}`)
+  //     if(valid.ok){
+  //       const data = await valid.json()
+  //       session.expiry = new Date(data.expires_at)
+  //       await setupSessionTimers(session.expiry, { onWarning, onExpiry })
+  //     }
+  //   }
+  // })
+
+  $effect(async () => {
+
+    if(page.url.pathname){
+      const sid = getCookie('canal_session') 
+
+      if(sid){
+        const valid = await fetch(`${PUBLIC_SERVER}/canal/session/poll?id=${sid}`)
+        if(valid.ok){
+          const data = await valid.json()
+          session.expiry = new Date(data.expires_at)
+          await setupSessionTimers(session.expiry, { onWarning, onExpiry })
+        }
       }
     }
     
-    const interval = setInterval(async () => {
-      await trackSession(sessionExpiry)
-    }, 1000)
-
-    return () => { clearInterval(interval) }
+    return () => { clearSessionTimers() }
   })
-
 </script>
 
 <header class="pb-4 pt-6">
