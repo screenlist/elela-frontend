@@ -97,7 +97,7 @@
       <div class="card-actions flex-col mt-4">
         <button onclick={openFiatModal} class="btn btn-neutral items-center w-full">{pricingData.price_zar} <CreditCard /></button>
         <div class="divider">OR</div>
-        <a href="/generate/buy/crypto" class="btn btn-neutral items-center w-full">
+        <a data-sveltekit-reload href={`/generate/buy/crypto?quantity=${quantity}`} class="btn btn-neutral items-center w-full">
           {pricingData.price_avax} AVAX
           <svg width="25" height="25" viewBox="0 0 2501 2501" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="1250.5" cy="1250.5" r="954.5" fill="white"/>
