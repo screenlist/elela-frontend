@@ -10,6 +10,7 @@
   import { PUBLIC_SERVER } from '$env/static/public'
   import { setupSessionTimers, clearSessionTimers } from '$lib/session'
   import { session } from '$lib/expiry.svelte'
+  import { cleanupToasts } from '$lib/toasts.js'
 
   let { children } = $props()
 
