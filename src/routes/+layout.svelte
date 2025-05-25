@@ -11,8 +11,9 @@
   import { setupSessionTimers, clearSessionTimers } from '$lib/session'
   import { session } from '$lib/expiry.svelte'
   import { cleanupToasts } from '$lib/toasts.js'
+  import { getActivity, setActivity } from '$lib/active.svelte'
 
-  let { children } = $props()
+  let { children, data } = $props()
 
   function getCookie(name) {
     const cookieArray = document.cookie.split('; ');
@@ -32,6 +33,7 @@
     await fetch(`/canal/settings/logout`, { method: 'POST' })
     goto('/')
     session.expiry = null
+    setActivity(false)
     clearSessionTimers()
     if(warningOnceOpened){
       sessionWarningDialog.close()
@@ -58,18 +60,13 @@
     sessionWarningDialog.close()
   }
 
-  // onMount(async () => { 
-  //   const sid = getCookie('canal_session') 
-
-  //   if(sid){
-  //     const valid = await fetch(`${PUBLIC_SERVER}/canal/session/poll?id=${sid}`)
-  //     if(valid.ok){
-  //       const data = await valid.json()
-  //       session.expiry = new Date(data.expires_at)
-  //       await setupSessionTimers(session.expiry, { onWarning, onExpiry })
-  //     }
-  //   }
-  // })
+  onMount(() => { 
+    if(data?.logged_in === true){
+      setActivity(true)
+    } else {
+      setActivity(false)
+    }
+  })
 
   $effect(async () => {
 
