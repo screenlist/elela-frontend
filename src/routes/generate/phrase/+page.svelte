@@ -11,11 +11,10 @@
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `canal_${Date.now()}.txt`
+    a.download = `canal_${data.premium ? 'premium' : 'free'}_${Date.now()}.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
-  
 </script>
 
 <div class="flex flex-col justify-items-start items-center p-4">
