@@ -97,7 +97,7 @@
       <div class="card-actions flex-col mt-4">
         <button onclick={openFiatModal} class="btn btn-neutral items-center w-full">{pricingData.price_zar} <CreditCard /></button>
         <div class="divider">OR</div>
-        <a data-sveltekit-reload href={`/generate/buy/crypto?quantity=${quantity}`} class="btn btn-neutral items-center w-full">
+        <a href={`/generate/buy/crypto?quantity=${quantity}`} class="btn btn-neutral items-center w-full">
           {pricingData.price_avax} AVAX
           <svg width="25" height="25" viewBox="0 0 2501 2501" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="1250.5" cy="1250.5" r="954.5" fill="white"/>
@@ -121,7 +121,7 @@
     </fieldset>
     <div class="modal-action min-w-1/2">
       <button onclick={closeFiatModal} class="btn btn-outline flex-1">Cancel</button>
-      <a onclick={closeFiatModal} href={`/generate/pay/fiat?quantity=${quantity}&email=${email}`} class="btn btn-neutral flex-1">Pay</a>
+      <a onclick={closeFiatModal} href={`/generate/buy/fiat?quantity=${quantity}&email=${email}`} class="btn btn-neutral flex-1">Pay</a>
     </div>
   </div>
   <form method="dialog" class="modal-backdrop">
