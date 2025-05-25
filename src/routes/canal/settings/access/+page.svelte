@@ -1,0 +1,96 @@
+<script>
+  import QRCode from 'qrcode'
+  import { enhance } from '$app/forms'
+  import { Lock, LockOpen, Info } from '@lucide/svelte';
+  import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
+  import { toasts } from '$lib/toasts.svelte.js'
+  import { onDestroy } from 'svelte'
+  let { data, form } = $props()
+  let setup = $state(false)
+  let token = $state(null)
+  let secret =$state(null)
+  let uri = $state(null)
+
+  let qrUrl = $state('')
+
+  $effect(() => {
+    if(setup){
+      QRCode.toDataURL(uri, (err, url) => {
+        qrUrl = url
+      })
+    }
+  })
+  
+  onDestroy(() => { cleanupToasts() })
+  // $inspect(data, form).with(console.log)
+</script>
+
+<section class="card bg-base-200 min-h-[70vh] w-full">
+  <div class="card-body">
+    <h2 class="card-title">Secure Access</h2>
+    <span class="opacity-50">Manage multi-factor authentication to secure your canal</span>
+    {#if data.canal.usage.topt_enabled && !setup}
+      <form method="POST" action="?/disable" use:enhance>
+        <div class="card-actions">
+          <button class="btn btn-neutral">Disable</button>
+        </div>
+      </form>
+    {:else if !data.canal.usage.topt_enabled && !setup}
+      <form method="POST" action="?/setup" use:enhance={() => {
+        return async ({result, update}) => {
+          console.log(result)
+          if(result.data?.autherror){ 
+            addToast({ message: result.data.autherror, type: 'error', auto: true }) 
+          } else {
+            uri = result.data.setup.uri
+            secret = result.data.setup.secret
+            token = result.data.setup.token
+            setup = true
+          }
+          await update()
+        }
+      }}>
+        <p class="alert alert-soft alert-info mb-4"><Info/>After initiating the setup do not refresh the page until you have enabled secure access, otherwise you will need to wait at least 3 minutes before you can restart.</p>
+        <div class="card-actions">
+          <button class="btn btn-neutral">Setup</button>
+        </div>
+      </form>
+    {/if}
+    {#if !data.canal.usage.topt_enabled && setup}
+      <form method="POST" action="?/enable" use:enhance={({formData}) => {
+        if(authToken){ formData.append('auth_token', token) }
+        return async ({result, update}) => {
+          if(result.data?.autherror){ 
+            addToast({ message: result.data.autherror, type: 'error', auto: true }) 
+          } else {
+            uri = null
+            secret = null
+            token = null
+            setup = false
+          }
+          await update()
+        }
+      }}>
+        {#if qrUrl}
+          <img class="mb-4 mt-2" src={qrUrl} alt="QR code" />
+          <p class="alert alert-soft alert-info mb-4"><Info/>Scan the QR code with your Authenicator app of choice or manually enter the code below.</p>
+        {/if}
+        <span class="badge badge-neutral">{secret}</span>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Code</legend>
+          <input name="topt_token" type="text" class="input" placeholder="Type here" />
+        </fieldset>
+        <div class="card-actions">
+          <button class="btn btn-neutral">Enable</button>
+        </div>
+      </form>
+    {/if}
+  </div>
+</section>
+<div class="toast toast-bottom toast-center">
+  {#each toasts as toast (toast.id) }
+    <div class={`alert alert-${toast.type}`}>
+      <span>{toast.message}</span>
+    </div>
+  {/each}
+</div>
