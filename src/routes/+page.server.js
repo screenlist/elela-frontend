@@ -58,7 +58,8 @@ export const actions = {
       cookies.set('canal_session', claims.sid, { sameSite: 'strict', path: '/', expires: new Date(claims.exp*1000), httpOnly: false })
       redirect(302, '/canal')
     } else if(canal.auth_token){ 
-      redirect(302, '/canal/2fa')
+      cookies.set('auth_token', canal.auth_token, { sameSite: 'strict', path: '/', expires: new Date( Date.now()+1000*60*3 ) })
+      redirect(302, '/access')
     }
   }
 }
