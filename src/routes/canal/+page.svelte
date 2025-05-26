@@ -23,13 +23,13 @@
       <div class="flex flex-row gap-4 mt-2 mb-2">
         <div class="badge badge-neutral">{data.canal.usage.is_premium ? 'Premium' : 'Free'}</div>
         {#if data.canal.usage.is_premium}
-          <div class={`badge ${data.canal.usage.topt_enabled ? 'badge-success' : 'badge-warning'}`}>
-            {#if data.canal.usage.topt_enabled}
+          <div class={`badge ${data.canal.usage.totp_enabled ? 'badge-success' : 'badge-warning'}`}>
+            {#if data.canal.usage.totp_enabled}
               <Lock size={18}/>
             {:else}
               <LockOpen size={18}/>
             {/if}
-            {data.canal.usage.topt_enabled ? 'Access Secured' : 'Access Not Secured'}
+            {data.canal.usage.totp_enabled ? 'Access Secured' : 'Access Not Secured'}
           </div>
         {:else}
           <div class={`badge badge-warning`}>
