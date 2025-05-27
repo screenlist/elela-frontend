@@ -17,7 +17,7 @@
 </script>
 
 <div class="flex flex-col justify-items-start p-4">
-  <div class="card card-border mt-4 card-sm bg-base-300 max-w-sm w-full min-w-xs">
+  <div class="card card-border card-sm bg-base-300 max-w-sm w-full min-w-xs">
     <section class="card-body">
       <h2 class="card-title uppercase">Canal {data.canal.usage.id}</h2>
       <div class="flex flex-row gap-4 mt-2 mb-2">
@@ -54,9 +54,9 @@
       </div>
       <div class="card-actions">
         {#if data.canal.usage.is_premium}
-          <button class="btn btn-neutral uppercase w-full">Refill Canal</button>
+          <a href="/canal/settings/refill" class="btn btn-neutral uppercase w-full">Refill Canal</a>
         {:else}
-          <button class="btn btn-primary uppercase w-full">Buy a Premium Canal</button>
+          <a href="/generate/buy" class="btn btn-primary uppercase w-full">Buy a Premium Canal</a>
         {/if}
       </div>
     </section>
@@ -66,12 +66,12 @@
       <h2 class="card-title">Session</h2>
       <div class="flex flex-col gap-3 mt-2 mb-4">
         <div class="flex flex-row w-full">
-          <p class="flex-1">Began at</p>
+          <p class="flex-1">Since</p>
 
           <span class="flex-1">{new Date(data.session.created_at).toLocaleDateString('en-ZA', { hour: 'numeric', minute: 'numeric', second: 'numeric' })}</span>
         </div>
         <div class="flex flex-row w-full">
-          <p class="flex-1">Ends at</p>
+          <p class="flex-1">Until</p>
 
           <span class="flex-1">{new Date(data.session.expires_at).toLocaleDateString('en-ZA', { hour: 'numeric', minute: 'numeric', second: 'numeric' })}</span>
         </div>
