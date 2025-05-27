@@ -8,11 +8,23 @@ export async function load({ url }){
   if(ref && sender){
     const res = await fetch(`${PUBLIC_SERVER}/canal/generate?ref=${ref}&sender=${sender}`)
     if(!res.ok){ error(res.status, { message: await res.text() }) }
-    return await res.json()
+    const data = await res.json()
+
+    if(data.points){
+      redirect(307, '/canal')
+    } else {
+      return data
+    }
   } else if (ref && !sender){
     const res = await fetch(`${PUBLIC_SERVER}/canal/generate?ref=${ref}`)
     if(!res.ok){ error(res.status, { message: await res.text() }) }
-    return await res.json()
+    
+    const data = await res.json()
+    if(data.points){
+      redirect(307, '/canal')
+    } else {
+      return data
+    }
   } else {
     const res = await fetch(`${PUBLIC_SERVER}/canal/generate`)
     if(!res.ok){ error(res.status, { message: await res.text() }) }

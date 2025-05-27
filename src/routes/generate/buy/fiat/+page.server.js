@@ -6,7 +6,8 @@ import { decodeJwt } from 'jose'
 export async function load({ url }){
   const quantity = url.searchParams.get('quantity')
   const email = url.searchParams.get('email')
-  const res = await fetch(`${PUBLIC_SERVER}/payments/fiat?quantity=${quantity}&email=${email}`)
+  const conduit = url.searchParams.get('conduit')
+  const res = await fetch(`${PUBLIC_SERVER}/payments/fiat?quantity=${quantity}&email=${email}${conduit ? `&conduit=${conduit}` : ''}`)
 
   if(!res.ok){ error(404, { message: await res.text() }) }
   
