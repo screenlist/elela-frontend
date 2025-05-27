@@ -12,14 +12,9 @@
   import { session } from '$lib/expiry.svelte'
   import { cleanupToasts } from '$lib/toasts.js'
   import { getActivity, setActivity } from '$lib/active.svelte'
+  import { getCookie } from '$lib/cookie'
 
   let { children, data } = $props()
-
-  function getCookie(name) {
-    const cookieArray = document.cookie.split('; ');
-    const cookie = cookieArray.find(row => row.startsWith(`${name}=`));
-    return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
-  }
 
   let sessionWarningDialog
   let warningOnceOpened = $state(false)
