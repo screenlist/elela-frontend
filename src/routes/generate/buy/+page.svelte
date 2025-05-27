@@ -28,7 +28,7 @@
       pricingData = await res.json()
       loadingPricing = false
     } else {
-      pricingData = true
+      pricingError = true
       loadingPricing = false
     }
   }
