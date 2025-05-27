@@ -5,8 +5,7 @@ import { PUBLIC_SERVER } from '$env/static/public'
 export async function handle({ event, resolve }) {
 	const routes = [
 		'quota',
-    '/canal',
-		/.*\/bridges\/?.*/,
+		/.*\/canal\/?.*/,
 		// /.*\/new\/?.*/,
 		// /.*\/edit\/?.*/,
 		// /.*\/dashboard\/?.*/
