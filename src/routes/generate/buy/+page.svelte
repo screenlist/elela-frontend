@@ -1,5 +1,5 @@
 <script>
-  import { Info, ArrowUpDown, FolderClosed, Phone, CreditCard } from '@lucide/svelte'
+  import { Info, ArrowUpDown, FolderClosed, Phone, CreditCard, Droplet, DollarSign } from '@lucide/svelte'
   import { PUBLIC_SERVER, PUBLIC_WALLETKIT_ID, PUBLIC_CLIENT } from '$env/static/public'
 
   // Fiat
@@ -61,11 +61,27 @@
       <section class="card card-border card-xs bg-accent max-w-lg w-full">
         <div class="card-body">
           {#if loadingPricing}
-            <div class="flex justify-center items-center h-83 w-full">
+            <div class="flex justify-center items-center h-101 w-full">
               <span class="loading loading-spinner text-neutral"></span>
             </div>
           {:else}
-            <h2 class="card-title">{quantity} drops for <span class="badge badge-neutral">${pricingData.price_usd}</span></h2>
+            <div class="stats stats-horizontal shadow">
+              <div class="stat">
+                <div class="stat-figure text-neutral" >
+                  <Droplet />
+                </div>
+                <div class="stat-title">Drops</div>
+                <div class="stat-value">{quantity}</div>
+              </div>
+            
+              <div class="stat">
+                <div class="stat-figure text-neutral" >
+                  <DollarSign/>
+                </div>
+                <div class="stat-title">Cost</div>
+                <div class="stat-value">{pricingData.price_usd}</div>
+              </div>
+            </div>
             <div class="stats stats-vertical shadow">
               <div class="stat">
                 <div class="stat-figure text-neutral" >
