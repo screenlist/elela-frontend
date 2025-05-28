@@ -3,14 +3,22 @@ import { PUBLIC_SERVER } from '$env/static/public'
 
 export async function load({ cookies, url }){
   const token = cookies.get('access_token')
-  const response = await fetch(`${PUBLIC_SERVER}/canal/session/validate`, {
+  const sessionRes = await fetch(`${PUBLIC_SERVER}/canal/session/validate`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  const statisticsRes = await fetch(`${PUBLIC_SERVER}/canal/statistics`, {
     method: 'GET',
     headers: { 'Authorization': `Bearer ${token}` }
   })
 
-  if(!response.ok){
-    error(response.status, { message: await response.text() })
+  if(!sessionRes.ok){
+    error(sessionRes.status, { message: await sessionRes.text() })
   }
 
-  return {session: await response.json()}
+  if(!statisticsRes.ok){
+    error(statisticsRes.status, { message: await statisticsRes.text() })
+  }
+
+  return {session: await sessionRes.json(), statistics: await statisticsRes.json()}
 }
