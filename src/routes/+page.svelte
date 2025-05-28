@@ -40,10 +40,10 @@
     {/if} 
     <div class="card card-border mt-4 card-sm bg-base-300 max-w-sm w-full min-w-xs">
       <div class="card-body">
-        <h2 class="card-title uppercase">Flare</h2>
+        <h2 class="card-title uppercase">Bridge</h2>
         <div class="card-actions flex-row justify-evenly mt-4">
-          <a href="/wave" class="btn btn-neutral w-auto flex-1/2">Send a counterflare</a>
-          <a href="/bridge" class="btn btn-neutral w-auto flex-1/2">Approach the bridge</a>
+          <a href="/wave" class="btn btn-neutral w-auto flex-1/2">Send a Counter-Flare</a>
+          <a href="/bridge" class="btn btn-neutral w-auto flex-1/2">Join a Bridge Chat</a>
         </div>
       </div>
     </div>

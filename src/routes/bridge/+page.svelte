@@ -5,7 +5,7 @@
 <div class="flex flex-col justify-items-start items-center p-4">
   <div class="card card-border bg-base-300 max-w-lg w-full min-w-xs">
     <div class="card-body">
-      <h1 class="card-title">Bridge chat</h1>
+      <h1 class="card-title">Bridge Chat</h1>
       <div role="alert" class="alert alert-soft alert-warning">
         <Info />
         <span>You must have already replied to a flare with a counterflare</span>
@@ -23,7 +23,7 @@
           <input name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
       </fieldset>
       <div class="card-actions flex-col">
-        <button class="btn btn-primary mt-4 w-full">Approach</button>
+        <button class="btn btn-primary mt-4 w-full">Join</button>
       </div>
     </div>
   </div>
