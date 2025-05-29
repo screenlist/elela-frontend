@@ -1,6 +1,30 @@
 import { error, fail, redirect } from '@sveltejs/kit'
 import { PUBLIC_SERVER } from '$env/static/public'
 
+export async function load({ cookies, url, request }){
+  const token = cookies.get('access_token')
+
+  const upcoming = await fetch(`${PUBLIC_SERVER}/canal/bridges?status=upcoming`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+
+  const active = await fetch(`${PUBLIC_SERVER}/canal/bridges?status=active`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+
+  if(!upcoming.ok){
+    error(upcoming.status, { message: await upcoming.text() })
+  }
+
+  if(!active.ok){
+    error(active.status, { message: await active.text() })
+  }
+
+  return {upcoming: await upcoming.json(), active: await active.json()}
+}
+
 export const actions = {
   bridge: async ({ request, cookies }) => {
     const token = cookies.get('access_token')
