@@ -63,39 +63,51 @@
     <section class="card card-sm card-border bg-base-300 xl:flex-1">
       <div class="card-body">
         <h3 class="card-title">Active</h3>
-        <ul class="list bg-base-100 rounded-box shadow-md">
-          {#each data.active as data}
-            <li class="list-row">
-              <div><span class="text-4xl">{data.flare.split(' ')[0]}</span></div>
-              <div>
-                <div>{data.flare}</div>
-                <div class="text-xs uppercase font-semibold opacity-60">Ends in {Math.ceil( (new Date(data.end_time).valueOf() - Date.now()) / (1000*60) )} mins</div>
-              </div>
-              <button class="btn btn-square btn-ghost">
-                <Eye />
-              </button>
-            </li>
-          {/each}
-        </ul>
+        {#if data.active.length === 0}
+          <figure>
+            <img src="/friends.svg" alt="An illustration a person sitting in a garden with their pet" />
+          </figure>
+        {:else}
+          <ul class="list bg-base-100 rounded-box shadow-md">
+            {#each data.active as data}
+              <li class="list-row">
+                <div><span class="text-4xl">{data.flare.split(' ')[0]}</span></div>
+                <div>
+                  <div>{data.flare}</div>
+                  <div class="text-xs uppercase font-semibold opacity-60">Ends in {Math.ceil( (new Date(data.end_time).valueOf() - Date.now()) / (1000*60) )} mins</div>
+                </div>
+                <a href={`/canal/bridges/${data.id.split(':')[1]}`} class="btn btn-square btn-ghost">
+                  <Eye />
+                </a>
+              </li>
+            {/each}
+          </ul>
+        {/if}
       </div>
     </section>
     <section class="card card-sm card-border bg-base-300 xl:flex-1">
       <div class="card-body">
         <h3 class="card-title">Upcoming</h3>
-        <ul class="list bg-base-100 rounded-box shadow-md">
-          {#each data.upcoming as data}
-            <li class="list-row">
-              <div><span class="text-4xl">{data.flare.split(' ')[0]}</span></div>
-              <div>
-                <div>{data.flare}</div>
-                <div class="text-xs uppercase font-semibold opacity-60">Starts in {Math.ceil( (new Date(data.start_time).valueOf() - Date.now()) / (1000*60) )} mins</div>
-              </div>
-              <button class="btn btn-square btn-ghost">
-                <Eye />
-              </button>
-            </li>
-          {/each}
-        </ul>
+        {#if data.upcoming.length === 0}
+          <figure>
+            <img src="/friends.svg" alt="An illustration a person sitting in a garden with their pet" />
+          </figure>
+        {:else}
+          <ul class="list bg-base-100 rounded-box shadow-md">
+            {#each data.upcoming as data}
+              <li class="list-row">
+                <div><span class="text-4xl">{data.flare.split(' ')[0]}</span></div>
+                <div>
+                  <div>{data.flare}</div>
+                  <div class="text-xs uppercase font-semibold opacity-60">Starts in {Math.ceil( (new Date(data.start_time).valueOf() - Date.now()) / (1000*60) )} mins</div>
+                </div>
+                <a href={`/canal/bridges/${data.id.split(':')[1]}`} class="btn btn-square btn-ghost">
+                  <Eye />
+                </a>
+              </li>
+            {/each}
+          </ul>
+        {/if}
       </div>
     </section>
   </div>
