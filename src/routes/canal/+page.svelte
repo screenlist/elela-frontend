@@ -39,17 +39,14 @@
         {/if}
       </div>
       <div class="fieldset">
-        <p class="label">Drops usage</p>
+        <p class="label">Usage</p>
         <progress class="progress w-full" value={data.canal.usage.capacity - data.canal.usage.usage} max={data.canal.usage.capacity}></progress>
       </div>
       <div class="stats shadow">
-        <div class="stat">
-          <div class="stat-value">{( data.canal.usage.usage / 100 ).toFixed(2)}</div>
-          <div class="stat-desc">Used</div>
-        </div>
-        <div class="stat">
-          <div class="stat-value">{( data.canal.usage.capacity / 100 ).toFixed(2)}</div>
-          <div class="stat-desc">Total</div>
+        <div class="stat place-items-center">
+          <div class="stat-title">Drops</div>
+          <div class="stat-value">{( ( data.canal.usage.capacity - data.canal.usage.usage ) / 100 ).toFixed(2)}</div>
+          <div class="stat-desc">Left</div>
         </div>
       </div>
       <div class="card-actions">
