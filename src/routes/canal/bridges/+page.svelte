@@ -19,7 +19,7 @@
   
 <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
   <div class="card card-border card-sm bg-base-300 w-full sm:w-1/2 md:w-2/5 lg:w-1/3 xl:w-1/4">
-    <form class="card-body justify-between" method="POST" action="?/bridge" use:enhance={({formData}) => {
+    <form id="new" class="card-body justify-between" method="POST" action="?/bridge" use:enhance={({formData}) => {
       return async ({result, update}) => {
         console.log(result)
         if(result.data?.posterror){ 
@@ -60,7 +60,7 @@
     </form>
   </div>
   <div class="flex flex-col gap-4 w-full sm:flex-1 xl:flex-row">
-    <section class="card card-sm card-border bg-base-300 xl:flex-1">
+    <section id="active" class="card card-sm card-border bg-base-300 xl:flex-1">
       <div class="card-body">
         <h3 class="card-title">Active</h3>
         {#if data.active.length === 0}
@@ -85,7 +85,7 @@
         {/if}
       </div>
     </section>
-    <section class="card card-sm card-border bg-base-300 xl:flex-1">
+    <section id="upcoming" class="card card-sm card-border bg-base-300 xl:flex-1">
       <div class="card-body">
         <h3 class="card-title">Upcoming</h3>
         {#if data.upcoming.length === 0}

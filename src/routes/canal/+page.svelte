@@ -3,17 +3,14 @@
   import { setupSessionTimers, clearSessionTimers } from '$lib/session'
   import { session } from '$lib/expiry.svelte'
   import { Clock, Lock, LockOpen, MessageCircle, Info } from '@lucide/svelte';
-    import { setActivity } from '$lib/active.svelte.js';
 
   let { data } = $props()
   async function onExit(){
     await fetch(`/canal/settings/logout`, { method: 'POST' })
     goto('/')
     session.expiry = null
-    setActivity(false)
     clearSessionTimers()
   }
-  console.log(new Date(data.canal.usage.created_at).valueOf() + 1000*60*60*24*3, new Date( new Date(data.canal.usage.created_at) + 1000*60*60*24*3 ).toLocaleDateString('en-ZA', { hour: 'numeric', minute: 'numeric', second: 'numeric' }))
 </script>
 
 <div class="grid auto-rows-auto grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-4">
@@ -117,7 +114,7 @@
         <span>Secure ephemeral chatrooms for people to connect without sharing personal information beforehand</span>
       </div>
       <div class="card-actions">
-        <a href="/canal" class="btn btn-outline uppercase w-full">Schedule A Bridge</a>
+        <a href="/canal/bridges#new" class="btn btn-outline uppercase w-full">Schedule a Bridge</a>
       </div>
     </section>
   </div>
@@ -138,7 +135,7 @@
         </div>
       </div>
       <div class="card-actions justify-end">
-        <a href="/canal" class="btn btn-outline uppercase w-1/2">View</a>
+        <a href="/canal/bridges#upcoming" class="btn btn-outline uppercase w-1/2">View</a>
       </div>
     </section>
   </div>
@@ -155,7 +152,7 @@
         </div>
       </div>
       <div class="card-actions justify-end">
-        <a href="/canal" class="btn btn-outline uppercase w-1/2">Join</a>
+        <a href="/canal/bridges#active" class="btn btn-outline uppercase w-1/2">View</a>
       </div>
     </section>
   </div>
