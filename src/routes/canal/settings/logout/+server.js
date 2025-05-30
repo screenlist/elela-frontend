@@ -10,5 +10,8 @@ export async function POST({ cookies }){
     }
   )
 
+  cookies.delete('access_token', { path: '/' })
+  cookies.delete('canal_session', { path: '/' })
+
   return new Response(JSON.stringify({ 'status': 'success' }))
 }
