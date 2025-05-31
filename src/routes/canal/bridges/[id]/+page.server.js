@@ -14,22 +14,18 @@ export async function load({ cookies, url, params }){
     error(res.status, { message: await res.text() })
   }
 
-  return { bridge: await res.json() }
+  return await res.json() 
 }
 
 export const actions = {
-  bridge: async ({ request, cookies }) => {
+  connect: async ({ request, cookies, params }) => {
     const token = cookies.get('access_token')
+    const id = params.id
     const data = await request.formData()
     const values = Object.fromEntries( Object.entries( Object.fromEntries(data.entries()) ).filter(([_, value]) => value != "") )
-    const flare = values.flare
-    const date = values.date
-    const time = values.time
-
-    if(!date || !time){ return fail(400, { posterror: 'Please fill in both the date and time' }) }
-
-    const start = new Date( date+'T'+time )
-    const res = await fetch(`${PUBLIC_SERVER}/canal/bridges`,
+    const counterflare = values.counterflare
+    
+    const res = await fetch(`${PUBLIC_SERVER}/canal/bridges/${id}/connect`,
       {
         method: 'POST',
         headers: { 
@@ -37,14 +33,13 @@ export const actions = {
           'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify({
-          flare: flare,
-          start_time: start
+          counterflare: counterflare
         })
       }
     )
     
     if(!res.ok){ return fail(res.status, { posterror: await res.text()}) }
 
-    return { new_bridge: await res.json() }
+    return { success: true }
   }
 }

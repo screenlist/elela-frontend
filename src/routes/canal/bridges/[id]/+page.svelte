@@ -1,9 +1,10 @@
 <script>
-  import { Calendar, Clock } from "@lucide/svelte"
+  import { Calendar, Clock, Info } from "@lucide/svelte"
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
   import { onDestroy } from 'svelte'
   import { addToCalendar } from '$lib/event'
+  import { enhance } from "$app/forms"
 
   let { data } = $props()
   let connect = $state(false) 
@@ -50,22 +51,60 @@
             </div>
           </div>
         {/if}
-        <div class="stats shadow">
-          <div class="stat place-items-center">
-            <div class="stat-title">Connections</div>
-            <div class="stat-value">{data.bridge.connections}</div>
+        {#if data.bridge.connections < 1}
+          <div class="stats shadow">
+            <div class="stat place-items-center">
+              <div class="stat-title">Responses</div>
+              <div class="stat-value">{data.bridge.responses}</div>
+            </div>
           </div>
-          <div class="stat place-items-center">
-            <div class="stat-title">Responses</div>
-            <div class="stat-value">{data.bridge.responses}</div>
-          </div>
-        </div>
+        {:else}
+          <ul class="list bg-base-100 rounded-box shadow-md">
+            <li class="list-row">
+              <div><span class="text-4xl">{data.connection.counterflare.split(' ')[0]}</span></div>
+              <div>
+                <div>{data.connection.counterflare}</div>
+                <div class="text-xs uppercase font-semibold opacity-60">Connected</div>
+              </div>
+              <a href={`/bridge/${data.connection.connection_id.split(':')[1]}`} class="btn btn-square btn-outline">
+                Join
+              </a>
+            </li>
+          </ul>
+        {/if}
         <div class="card-actions">
           <a href="/canal/bridges" class="btn btn-outline flex-1">Back</a>
           <button onclick={copyFlare} type="button" class="btn btn-accent flex-1">Share</button>
-          <button type="button" class="btn btn-primary flex-1">Connect</button>
+          {#if data.bridge.connections < 1}
+            <button onclick={() => { connect = true }} type="button" class="btn btn-primary flex-1">Connect</button>
+          {/if}
         </div>
       </section>
+    {:else}
+      <form class="card-body" action="?/connect" method="POST" use:enhance={({formData}) => {
+        return async ({result, update}) => {
+          if(result.data?.posterror){ 
+            addToast({ message: result.data.posterror, type: 'error', auto: true }) 
+          }
+          if(result.data?.success === true){
+            connect = false
+          }
+          await update()
+        }
+      }}>
+        <h1 class="card-title">Connect</h1>
+        <fieldset class="fieldset">
+          <label for="counterflare" class="label">Counter Flare</label>
+          <input name="counterflare" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
+          <div role="alert" class="alert alert-soft alert-info">
+            <Info />
+            <span>This is the response flare that you want to establish connection with</span>
+          </div>
+        </fieldset>
+        <div class="card-actions">
+          <button type="submit" class="btn btn-accent flex-1">Approve</button>
+        </div>
+      </form>
     {/if}
   </div>
 </div>
