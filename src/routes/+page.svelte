@@ -46,7 +46,7 @@
       <div class="card-body">
         <h2 class="card-title uppercase">Bridge</h2>
         <div class="card-actions flex-row justify-evenly mt-4">
-          <a href="/wave" class="btn btn-neutral w-auto flex-1/2">Send a Counter-Flare</a>
+          <a href="/wave" class="btn btn-neutral w-auto flex-1/2">Send a Response Flare</a>
           <a href="/bridge" class="btn btn-neutral w-auto flex-1/2">Join a Bridge Chat</a>
         </div>
       </div>

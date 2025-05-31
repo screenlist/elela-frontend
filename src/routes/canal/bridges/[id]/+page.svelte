@@ -94,7 +94,7 @@
       }}>
         <h1 class="card-title">Connect</h1>
         <fieldset class="fieldset">
-          <label for="counterflare" class="label">Counter Flare</label>
+          <label for="counterflare" class="label">Response Flare</label>
           <input name="counterflare" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
           <div role="alert" class="alert alert-soft alert-info">
             <Info />

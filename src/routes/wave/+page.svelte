@@ -10,7 +10,7 @@
 
   function copyFlare(){
     navigator.clipboard.writeText(wave.counterflare)
-    addToast({ message: 'Counter-flare successfully copied to clipboard', type: 'success', auto: true })
+    addToast({ message: 'Response flare successfully copied to clipboard', type: 'success', auto: true })
   }
 
   function saveEvent(){ addToCalendar({
@@ -40,10 +40,10 @@
       }
     }}>
       {#if wave}
-        <h1 class="card-title">Share the Counter-Flare</h1>
+        <h1 class="card-title">Share the Response Flare</h1>
         <div role="alert" class="alert alert-soft alert-info">
           <Info />
-          <span>Copy the counter-flare below as it is & share it with person who gave you the flare</span>
+          <span>Copy the response flare below as it is & share it with person who gave you the flare</span>
         </div>
         <span class="font-mono w-full p-4 bg-base-300 font-semibold text-center text-base border-dashed border-1 rounded-lg border-neutral">{wave.counterflare}</span>
         <div class="card-actions flex-col">
@@ -81,7 +81,7 @@
           <span class="label">The initial phrase as exposed to you by a sailor</span>
           <input id="flare" name="flare" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
           <div class="divider"></div>
-          <label for="counterflare" class="fieldset-legend">Counter-Flare</label>
+          <label for="counterflare" class="fieldset-legend">Response Flare</label>
           <span class="label">A two word reply phrase of at least 4 letters each</span>
           <input id="counterflare" name="counterflare" type="text" class="input w-full" placeholder="calmly breathe" />
           <div role="alert" class="alert alert-soft alert-info">
@@ -98,7 +98,7 @@
           </div>
         </fieldset>
         <div class="card-actions flex-col">
-          <button type="submit" class="btn btn-primary mt-4 w-full">Reply</button>
+          <button type="submit" class="btn btn-primary mt-4 w-full">Respond</button>
         </div>
       {/if}
     </form>

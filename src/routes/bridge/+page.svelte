@@ -17,7 +17,7 @@
       <fieldset class="fieldset">
           <label for="flare" class="label">Flare</label>
           <input name="flare" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
-          <label for="counterflare" class="label">Counterflare</label>
+          <label for="counterflare" class="label">Response Flare</label>
           <input name="counterflare" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
           <label for="passphrase" class="label">Anchor</label>
           <input name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
