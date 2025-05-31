@@ -21,7 +21,7 @@
     description: `Their flare was '${wave.flare}' and you replied with '${wave.counterflare}', visit app.elela.online/bridge to join the chat or check to if you have been accepted.`
   }) }
 
-  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'long' });
+  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full' });
   const timeFormatter = new Intl.DateTimeFormat('en-ZA', { timeStyle: 'short' });
 
   onDestroy(() => {cleanupToasts()})
@@ -75,7 +75,7 @@
           <button type="button" onclick={() => wave = null} class="btn btn-outline w-full">Another Counter-Flare?</button>
         </div>
       {:else}
-        <h1 class="card-title">Counter-Flare</h1>
+        <h1 class="card-title">Response Flare</h1>
         <fieldset class="fieldset">
           <label for="flare" class="fieldset-legend">Flare</label>
           <span class="label">The initial phrase as exposed to you by a sailor</span>
