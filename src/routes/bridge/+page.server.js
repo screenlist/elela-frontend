@@ -1,19 +1,18 @@
 import { error, fail, redirect } from '@sveltejs/kit'
 import { PUBLIC_SERVER } from '$env/static/public'
+import { decodeJwt } from 'jose'
 
 export async function load({ cookies, url }){
   const token = cookies.get('access_token')
   const session = cookies.get('wave_session')
   if(token && session){
     const valid = await fetch(`${PUBLIC_SERVER}/canal/wave`, {
-      method: 'POST',
+      method: 'GET',
       headers: { 'Authorization': `Bearer ${token}` }
     })
 
     if(valid.ok){ 
       return { bridge: await valid.json() }
-    } else {
-      cookies.delete('wave_session', { path: '/' })
     }
   }
 }
