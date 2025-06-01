@@ -5,21 +5,6 @@ import { decodeJwt } from 'jose'
 
 export async function load({ cookies, url, request }){
   const token = cookies.get('access_token')
-
-  if(token){
-    const claims = decodeJwt(token)
-    const valid = await fetch(`${PUBLIC_SERVER}/canal/session/poll?id=${claims.sid}`)
-    if(valid.ok){ 
-      return { logged_in: true }
-    } else {
-      cookies.delete('access_token', { path: '/' })
-      cookies.delete('canal_session', { path: '/' })
-      return { logged_in: false }
-    }
-  } else {
-    return { logged_in: false }
-  }
-
 }
 
 export const actions = {
