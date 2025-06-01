@@ -11,7 +11,6 @@
   import { setupSessionTimers, clearSessionTimers } from '$lib/session'
   import { session } from '$lib/expiry.svelte'
   import { cleanupToasts } from '$lib/toasts.js'
-  import { getActivity, setActivity } from '$lib/active.svelte'
   import { getCookie } from '$lib/cookie'
 
   let { children, data } = $props()
@@ -28,7 +27,6 @@
     await fetch(`/canal/settings/logout`, { method: 'POST' })
     goto('/')
     session.expiry = null
-    setActivity(false)
     clearSessionTimers()
     if(warningOnceOpened){
       sessionWarningDialog.close()
@@ -54,14 +52,6 @@
     warningOnceOpened = false
     sessionWarningDialog.close()
   }
-
-  onMount(() => { 
-    if(data?.logged_in === true){
-      setActivity(true)
-    } else {
-      setActivity(false)
-    }
-  })
 
   $effect(async () => {
 
