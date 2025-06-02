@@ -3,7 +3,7 @@ import { PUBLIC_SERVER } from '$env/static/public'
 import { decodeJwt } from 'jose'
 
 export async function load({ cookies, url }){
-  const token = cookies.get('access_token')
+  const token = cookies.get('visitor_token')
   const session = cookies.get('wave_session')
   if(token && session){
     const valid = await fetch(`${PUBLIC_SERVER}/canal/wave`, {
@@ -46,7 +46,7 @@ export const actions = {
 
     if(auth.approved === true){
       const claims = decodeJwt(auth.access_token)
-      cookies.set('access_token', auth.access_token, { sameSite: 'strict', path: '/', expires: new Date(claims.exp*1000) })
+      cookies.set('visitor_token', auth.access_token, { sameSite: 'strict', path: '/', expires: new Date(claims.exp*1000) })
       cookies.set('wave_session', claims.sid, { sameSite: 'strict', path: '/', expires: new Date(claims.exp*1000), httpOnly: false })
       auth.access_token = null
       return { bridge: auth }
@@ -55,7 +55,7 @@ export const actions = {
     }
   },
   logout: async ({cookies}) => {
-    const token = cookies.get('access_token')
+    const token = cookies.get('visitor_token')
 
     const res = await fetch(`${PUBLIC_SERVER}/canal/wave/remove`,
       {
@@ -66,7 +66,7 @@ export const actions = {
 
     if(!res.ok){ return fail(res.status, { posterror: await res.text()}) }
 
-    cookies.delete('access_token', { path: '/' })
+    cookies.delete('visitor_token', { path: '/' })
     cookies.delete('wave_session', { path: '/' })
 
     return { success: true }
