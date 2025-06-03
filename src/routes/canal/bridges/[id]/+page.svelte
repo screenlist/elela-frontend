@@ -61,7 +61,7 @@
         {:else}
           <ul class="list bg-base-100 rounded-box shadow-md">
             <li class="list-row">
-              <div><span class="text-4xl">{data.connection.counterflare.split(' ')[0]}</span></div>
+              <div><span class="text-4xl">{Array.from(data.connection.counterflare.split(' ')[0])[0]}</span></div>
               <div>
                 <div>{data.connection.counterflare}</div>
                 <div class="text-xs uppercase font-semibold opacity-60">Connected</div>
