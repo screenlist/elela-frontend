@@ -63,7 +63,7 @@
     <section id="active" class="card card-sm card-border bg-base-300 xl:flex-1">
       <div class="card-body">
         <h3 class="card-title">Active</h3>
-        {#if data.active.length === 0}
+        {#if data.active?.length === 0}
           <figure>
             <img src="/friends.svg" alt="An illustration a person sitting in a garden with their pet" />
           </figure>
