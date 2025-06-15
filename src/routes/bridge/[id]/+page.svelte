@@ -241,7 +241,7 @@
             {
               time_to_destruction > 1000 * 60 * 3 ? 
               Math.round( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) ) :
-              `This bridge will collapse in ${Math.floor( (time_to_commencement % (1000 * 60 * 60)) / (1000 * 60) )} : ${Math.floor( (time_to_destruction % (1000 * 60)) / (1000) )}`
+              `This bridge will collapse in ${Math.floor( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) )} : ${Math.floor( (time_to_destruction % (1000 * 60)) / (1000) )}`
             }
           </span>
         </div> 
