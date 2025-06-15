@@ -1,9 +1,14 @@
 <script>
   import { Info } from '@lucide/svelte'
+  import { onDestroy } from 'svelte'
+  import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
+  import { toasts } from '$lib/toasts.svelte.js'
+
   let { data } = $props()
 
   function copyCanal(){
     navigator.clipboard.writeText(data.passphrase)
+    addToast({ message: 'Your passphrase has been copied to clipboard', type: 'success', auto: true }) 
   }
 
   function saveCanal(){
@@ -15,6 +20,8 @@
     a.click()
     URL.revokeObjectURL(url)
   }
+
+  onDestroy(() => { cleanupToasts() })
 </script>
 
 <div class="flex flex-col justify-items-start items-center p-4">
@@ -33,4 +40,11 @@
       </div>
     </div>
   </section>
+</div>
+<div class="toast toast-bottom toast-center">
+  {#each toasts as toast (toast.id) }
+    <div class={`alert alert-${toast.type}`}>
+      <span>{toast.message}</span>
+    </div>
+  {/each}
 </div>
