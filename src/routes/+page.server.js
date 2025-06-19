@@ -29,18 +29,29 @@ export const actions = {
     }
 
     const data = await request.formData()
-    const passphrase = await data.get('passphrase')
-    const schema = z.string().trim().min(1, 'Enter a canal passphrase')
-    const validate = schema.safeParse(passphrase)
+    const values = Object.fromEntries( Object.entries( Object.fromEntries(data.entries()) ).filter(([_, value]) => value != "") )
+
+    const schema = z.object({
+      sequence: z.string({ message: 'Provide letter sequence' }).length(8, 'The letter sequence is not correctly formatted'),
+      passphrase: z.string({ message: 'Provide a hash of your passphrase' })
+    })
+
+    const validate = schema.safeParse({ passphrase: values.passphrase_hash, sequence: values.sequence })
+
     if(validate.success === false){
-      return fail(400, { autherror: JSON.parse(validate.error.message)[0]['message'] })
+      const formatted = validate.error.format()
+      let message = ''
+      formatted._errors.forEach(val => message += `${val}; `)
+      if(formatted.sequence){ formatted.sequence._errors.forEach(val => message += `${val}; `) }
+      if(formatted.passphrase){ formatted.passphrase?._errors.forEach(val => message += `${val};`) }
+      return fail(400, { autherror: message })
     }
     
     const res = await fetch(`${PUBLIC_SERVER}/canal/auth`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'User-Agent': request.headers.get('user-agent') },
-        body: JSON.stringify({phrase: passphrase})
+        body: JSON.stringify({passphrase_hash: validate.data.passphrase, sequence: validate.data.sequence})
       }
     )
     
