@@ -71,8 +71,8 @@
         </div>
         <div class="divider"></div>
         <div class="card-actions flex-col">
-          <a href="/bridge" onclick={() => wave = null} class="btn btn-neutral w-full">Visit the Bridge</a>
-          <button type="button" onclick={() => wave = null} class="btn btn-outline w-full">Another Counter-Flare?</button>
+          <a href="/bridge" onclick={() => wave = null} class="btn btn-neutral w-full">Join Bridge</a>
+          <button type="button" onclick={() => wave = null} class="btn btn-outline w-full">Respond Again</button>
         </div>
       {:else}
         <h1 class="card-title">Response Flare</h1>
