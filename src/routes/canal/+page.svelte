@@ -16,7 +16,7 @@
 <div class="grid auto-rows-auto grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-4">
   <div class="card card-border card-sm bg-base-300 w-full h-full">
     <section class="card-body justify-between">
-      <h2 class="card-title uppercase">Canal {data.canal.usage.id}</h2>
+      <h2 class="card-title uppercase">Canal <span class="text-primary">{data.canal.usage.letter_sequence}</span></h2>
       <div class="flex flex-row gap-4 mt-2 mb-2">
         <div class="badge badge-neutral">{data.canal.usage.is_premium ? 'Premium' : 'Free'}</div>
         {#if data.canal.usage.is_premium}
