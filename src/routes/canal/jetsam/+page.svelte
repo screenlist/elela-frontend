@@ -3,14 +3,15 @@
   import { enhance } from '$app/forms'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
-  import { onDestroy } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import { PUBLIC_SERVER } from "$env/static/public"
 
   let { data } = $props()
   
   let bridge = $state(null)
-  let input = $state(null)
-  let file = $derived(input?.[0])
+  let input_file = $state(null)
+  let input_value = $state(null)
+  let file = $derived(input_file ? input_file[0] : null)
   let downloads = $state(3)
   let retention = $state(1)
 
@@ -22,9 +23,24 @@
     addToast({ message: 'Flare successfully copied to clipboard', type: 'success', auto: true })
   }
 
+  function startUpload(){
+    
+  }
+  
   $effect(async () => {
-    if(file && downloads && retention){
+    if(file){
       loading = true
+      const size = file.size
+
+      if(size >  40 * (1024 ** 3)) {
+        addToast({ message: 'Files bigger than 40GB are not accepted', type: 'error', auto: true }) 
+        loading = false
+        input_file = null
+        input_value = null
+        total_costs = 0
+        return
+      }
+      
       const res = await fetch(`${PUBLIC_SERVER}/jetsam/cost?size=${file.size}&downloads=${downloads}&retention=${retention}`, {
         method: 'POST'
       })
@@ -37,9 +53,11 @@
     }
   })
 
+  onMount(async () => { console.log((await navigator.storage.estimate()).quota/1024 ** 3) })
+
   onDestroy(() => {cleanupToasts()})
 
-  $inspect(file).with(console.log)
+  $inspect(input_value).with(console.log)
 </script>
 
 <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
@@ -67,7 +85,7 @@
       {/if}
       <fieldset class="fieldset">
         <label for="flare" class="fieldset-legend">File</label>
-        <input type="file" bind:files={input} class="file-input file-input-lg" />
+        <input type="file" bind:value={input_value} bind:files={input_file} class="file-input file-input-lg" />
 
         <label for="flare" class="fieldset-legend">Duration</label>
         <input id="drops" name="quantity" type="range" min="1" max="24" bind:value={retention} class="range w-full" />
@@ -87,10 +105,18 @@
     </section>
   </div>
   <div class="flex flex-col gap-4 w-full sm:flex-1 xl:flex-row">
-    <section id="active" class="card card-sm card-border min-h-lvh bg-base-300 xl:flex-1">
+    <section id="active" class="card card-sm card-border h-[calc(100vh-2rem)] sm:h-[calc(100vh-18.75rem)] xl:h-[calc(100vh-12rem)]  bg-base-300 xl:flex-1">
       <div class="card-body">
         <h3 class="card-title">Files</h3>
       </div>
     </section>
   </div>
+</div>
+
+<div class="toast toast-bottom toast-center">
+  {#each toasts as toast (toast.id) }
+    <div class={`alert alert-${toast.type}`}>
+      <span>{toast.message}</span>
+    </div>
+  {/each}
 </div>
