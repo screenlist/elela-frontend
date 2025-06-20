@@ -72,7 +72,7 @@
   })
 </script>
 {#if !page.url.pathname.startsWith('/bridge/')}
-  <header class="pb-4 pt-6">
+  <header class="pb-2 pt-2">
     <nav class="navbar bg-base-100 shadow-sm">
       <div class="navbar-start">
       </div>
