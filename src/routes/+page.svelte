@@ -93,7 +93,7 @@
           }
         }}>
           <h1 class="card-title uppercase">Canal</h1>
-          <span for="passphrase" class="label">Sequence</span>
+          <span for="passphrase" class="fieldset-legend">Sequence</span>
           <div class="flex items-center justify-between gap-2">
             <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${sequenceInput.length < 2 ? 'bg-primary text-base-100 border-base-100 border-dashed' : 'bg-base-100 border-primary'}`} >
               {sequenceInput[0] ? sequenceInput[0] : '•'}
@@ -133,7 +133,7 @@
             </div>
           {:else}
             <fieldset class="fieldset">
-              <label for="passphrase" class="label">Passphrase</label>
+              <label for="passphrase" class="fieldset-legend">Passphrase</label>
               <input id="passphrase" bind:value={passphrase} name="passphrase" type="password" class="input w-full" placeholder="all you need is six words" />
             </fieldset>
           {/if}
