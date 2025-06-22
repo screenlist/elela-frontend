@@ -2,7 +2,7 @@
   import { onMount, onDestroy, tick } from "svelte"
   import { page, navigating } from "$app/state"
   import { PUBLIC_SERVER, PUBLIC_APP_ENV } from "$env/static/public"
-  import { SendHorizonal, Clock } from "@lucide/svelte"
+  import { SendHorizonal, Clock, Image } from "@lucide/svelte"
   import { getCookie } from "$lib/cookie";
 
   let { data } = $props()
@@ -29,6 +29,8 @@
 
   let isConnectionAllowed = $derived(time_to_destruction > 0 && time_to_commencement < 0)
   let isConnected = $state(false)
+
+  let file_input
 
   function sendText(){
     if(text.length > 0 && sender?.readyState === WebSocket.OPEN){
@@ -130,6 +132,7 @@
     if (sender && sender.readyState === WebSocket.OPEN) {
       sender.close()
     }
+    if(file_input){ document.body.removeChild(file_input) }
   }
 
   function binarySearchInsertAsc(newItem) {
@@ -156,6 +159,34 @@
       time_to_destruction =  new Date(data.bridge.end_time).valueOf() - new Date().valueOf()
       time_to_commencement = new Date(data.bridge.start_time).valueOf() - new Date().valueOf()
     }, 1000)
+  }
+
+  function openFileDialog(){
+    if(!file_input){
+      file_input = document.createElement('input')
+
+      file_input.type = 'file'
+      file_input.accept = 'image/*'
+      file_input.multiple = false
+      
+      file_input.style.position = 'fixed'
+      file_input.style.top = '-1000px'
+      file_input.style.left = '-1000px'
+
+      document.body.appendChild(file_input)
+
+      file_input.addEventListener('change', () => {
+        const files = file_input.files
+        console.log(files)
+        
+        
+        document.body.removeChild(file_input)
+      })
+
+      file_input.click()
+    } else {
+      file_input.click()
+    }
   }
   
   onDestroy(() => {
@@ -281,6 +312,9 @@
       </div>
       {#if time_to_destruction > 0 && time_to_commencement < 0}
         <div class="join">
+          <button onclick={openFileDialog} type="button" class="btn btn-outline btn-circle mr-1" >
+            <Image />
+          </button>
           <input class="input join-item" bind:value={text} type="text" name="text" placeholder="Say something to the other guy..."/>
           <div class="card-actions">
             <button type="submit" onclick={sendText} class="btn btn-primary join-item">
