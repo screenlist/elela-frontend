@@ -49,6 +49,7 @@
             data: { message: text, cargo: cargo }
           }))
           text = ''
+          removeImage()
           scrollBottom()
           loading = false
         }
@@ -343,7 +344,7 @@
       {/if}
       <div bind:this={msgContainer} class="flex-1 overflow-y-auto scrollbar-hide">
         <div class="min-h-full flex flex-col justify-end">
-          {#if time_to_destruction > 0 && time_to_commencement < 0}
+          {#if time_to_commencement < 0 && time_to_destruction > 0}
             {#each messages as msg }
               <div class={`chat ${msg.in === person ? 'chat-end' : 'chat-start'}`}>
                 <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
@@ -351,49 +352,22 @@
                 </span>
               </div>
             {/each}
-            {#if preview && image}
-              <div class="card bg-neutral border-2 border-neutral w-full shadow-sm">
-                <figure id="prevfig" class="h-[calc(50vh-2rem)] rounded-md overflow-y-auto">
-                  <img
-                    src={preview}
-                    alt="Preview" />
-                </figure>
-                <div class="card-body text-base-100">
-                  <div class="flex flex-row items-center justify-between">
-                    <h3 class="font-bold flex-1">
-                      {#if loading}
-                        <span class="loading loading-spinner loading-xs"></span>
-                        <span class="ml-2">Sending...</span>
-                      {:else}
-                        <span>Image preview</span>
-                      {/if}
-                    </h3>
-                    <button disabled={loading} type="button" onclick={removeImage} class="btn btn-ghost btn-circle">
-                      <CircleX />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            {/if}
-          {/if}
-
-          {#if time_to_commencement > 0}
+          {:else if time_to_commencement > 0 && time_to_destruction > 0}
             <div class="flex flex-col w-full justify-center items-center pb-12">
               <div class="radial-progress bg-primary border-primary border-4 text-base-100 text-xl font-semibold" style={`--value:${time_elapsed_before_commencement}; --size:15rem; --thickness: 1rem;`} aria-valuenow={time_elapsed_before_commencement} role="progressbar">
                 <span>
                   {Math.floor( (time_to_commencement / (1000 * 60 * 60 * 24)) )} : 
                   {Math.floor( (time_to_commencement % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60) )} : 
                   {Math.floor( (time_to_commencement % (1000 * 60 * 60)) / (1000 * 60) )} : 
-                  {Math.floor( (time_to_commencement % (1000 * 60)) / (1000) )}</span>
+                  {Math.floor( (time_to_commencement % (1000 * 60)) / (1000) )}
+                </span>
               </div>
               <h2 class="mt-8 text-lg font-semibold">The bridge will erect soon</h2>
             </div>
-          {/if}
-
-          {#if time_to_destruction < 0}
+          {:else if time_to_commencement < 0 && time_to_destruction < 0}
             <div class="flex flex-col w-full justify-center items-center pb-12">
               <figure class="w-full max-w-sm">
-                <img src="/feeling-blue.svg" alt="An illustration of an giant sad face">
+                <img src="/feeling-blue.svg" alt="An illustration of an giant sad face"/>
               </figure>
               <h2 class="mt-4 text-xl font-semibold">The bridge has collapsed</h2>
             </div>
@@ -401,6 +375,30 @@
         </div>
       </div>
       {#if time_to_destruction > 0 && time_to_commencement < 0}
+        {#if preview && image}
+          <div class="card bg-neutral border-2 border-neutral w-full shadow-sm">
+            <figure id="prevfig" class="h-[calc(50vh-2rem)] rounded-md overflow-y-auto">
+              <img
+                src={preview}
+                alt="Preview" />
+            </figure>
+            <div class="card-body text-base-100">
+              <div class="flex flex-row items-center justify-between">
+                <h3 class="font-bold flex-1">
+                  {#if loading}
+                    <span class="loading loading-spinner loading-xs"></span>
+                    <span class="ml-2">Sending...</span>
+                  {:else}
+                    <span>Image preview</span>
+                  {/if}
+                </h3>
+                <button disabled={loading} type="button" onclick={removeImage} class="btn btn-ghost btn-circle">
+                  <CircleX />
+                </button>
+              </div>
+            </div>
+          </div>
+        {/if}
         <div class="join">
           <button disabled={loading} onclick={openFileDialog} type="button" class="btn btn-outline btn-circle mr-1" >
             <Image />
