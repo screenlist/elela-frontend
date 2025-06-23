@@ -2,8 +2,11 @@
   import { onMount, onDestroy, tick } from "svelte"
   import { page, navigating } from "$app/state"
   import { PUBLIC_SERVER, PUBLIC_APP_ENV } from "$env/static/public"
-  import { SendHorizonal, Clock, Image } from "@lucide/svelte"
-  import { getCookie } from "$lib/cookie";
+  import { SendHorizonal, Clock, Image, CircleX } from "@lucide/svelte"
+  import { getCookie } from "$lib/cookie"
+  import { sha1 } from 'hash-wasm'
+  import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
+  import { toasts } from '$lib/toasts.svelte.js'
 
   let { data } = $props()
 
@@ -30,16 +33,36 @@
   let isConnectionAllowed = $derived(time_to_destruction > 0 && time_to_commencement < 0)
   let isConnected = $state(false)
 
-  let file_input
+  let image = $state(null)
+  let preview = $state(null)
 
-  function sendText(){
-    if(text.length > 0 && sender?.readyState === WebSocket.OPEN){
-      sender.send(JSON.stringify({
-        type: 'text',
-        data: { message: text }
-      }))
-      text = ''
-      scrollBottom()
+  let loading = $state(false)
+
+  async function sendText(){
+    loading = true
+    if(image){
+      if(sender?.readyState === WebSocket.OPEN){
+        const cargo = await uploadImage()
+        if(cargo){
+          sender.send(JSON.stringify({
+            type: 'text',
+            data: { message: text, cargo: cargo }
+          }))
+          text = ''
+          scrollBottom()
+          loading = false
+        }
+      }
+    } else {
+      if(text.length > 0 && sender?.readyState === WebSocket.OPEN){
+        sender.send(JSON.stringify({
+          type: 'text',
+          data: { message: text }
+        }))
+        text = ''
+        scrollBottom()
+        loading = false
+      }
     }
   }
 
@@ -132,7 +155,7 @@
     if (sender && sender.readyState === WebSocket.OPEN) {
       sender.close()
     }
-    if(file_input){ document.body.removeChild(file_input) }
+    cleanupToasts()
   }
 
   function binarySearchInsertAsc(newItem) {
@@ -162,31 +185,72 @@
   }
 
   function openFileDialog(){
-    if(!file_input){
-      file_input = document.createElement('input')
+    const file_input = document.createElement('input')
 
-      file_input.type = 'file'
-      file_input.accept = 'image/*'
-      file_input.multiple = false
+    file_input.type = 'file'
+    file_input.accept = 'image/*'
+    file_input.multiple = false
+    
+    file_input.style.position = 'fixed'
+    file_input.style.top = '-1000px'
+    file_input.style.left = '-1000px'
+
+    document.body.appendChild(file_input)
+
+    file_input.addEventListener('change', () => {
+      console.log('something has changed')
+      const file = file_input.files[0]
+      if(file){
+        image = file
+        const reader = new FileReader()
+        reader.onload = e => { preview = e.target.result }
+        reader.readAsDataURL(file)
+      }
       
-      file_input.style.position = 'fixed'
-      file_input.style.top = '-1000px'
-      file_input.style.left = '-1000px'
+      document.body.removeChild(file_input)
+    })
 
-      document.body.appendChild(file_input)
+    file_input.click()
+  }
 
-      file_input.addEventListener('change', () => {
-        const files = file_input.files
-        console.log(files)
-        
-        
-        document.body.removeChild(file_input)
-      })
+  function removeImage(){
+    image = null
+    preview = null
+  }
 
-      file_input.click()
-    } else {
-      file_input.click()
-    }
+  async function uploadImage(){
+    const hash = await sha1(image)
+    const name = image.name
+    const type = image.type
+    const size = image.size
+    const response = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${data.bridge.connection_id}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({sha1: hash, type: type, name: name, size: size})
+      }
+    )
+    if(!response.ok){ addToast({ message: await response.text(), type: 'error', auto: true }); return null; }
+    const info = await response.json()
+    const upload = await fetch(info.url, {
+      method: 'POST',
+      headers: { 
+        'Authorization': info.token,
+        'X-Bz-File-Name': info.name,
+        'Content-Type': info.type,
+        'Content-Length': info.size,
+        'X-Bz-Content-Sha1': info.sha1
+      },
+      body: image
+    })
+    if(!upload.ok){ addToast({ message: await upload.text(), type: 'error', auto: true }); return null; }
+    const upload_info = await upload.json()
+    const finish = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${data.bridge.connection_id}?cargo=${info.id}`,{
+      method: 'PATCH',
+      body: JSON.stringify({file_id: upload_info.fileId})
+    })
+    if(!finish.ok){ addToast({ message: await finish.text(), type: 'error', auto: true }); return null; }
+    const cargo = await finish.json()
+    return cargo.id
   }
   
   onDestroy(() => {
@@ -227,7 +291,7 @@
 
   $effect(() => { scrollBottom() })
 
-  $inspect(isConnected, isConnectionAllowed).with(console.log)
+  $inspect(image).with(console.log)
 
   function returnLink(){
     if(person === data.bridge.bridge_id && isConnectionAllowed){
@@ -282,9 +346,35 @@
           {#if time_to_destruction > 0 && time_to_commencement < 0}
             {#each messages as msg }
               <div class={`chat ${msg.in === person ? 'chat-end' : 'chat-start'}`}>
-                <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>{msg.body}</span>
+                <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
+                  {msg.body}
+                </span>
               </div>
             {/each}
+            {#if preview && image}
+              <div class="card bg-neutral border-2 border-neutral w-full shadow-sm">
+                <figure id="prevfig" class="h-[calc(50vh-2rem)] rounded-md overflow-y-auto">
+                  <img
+                    src={preview}
+                    alt="Preview" />
+                </figure>
+                <div class="card-body text-base-100">
+                  <div class="flex flex-row items-center justify-between">
+                    <h3 class="font-bold flex-1">
+                      {#if loading}
+                        <span class="loading loading-spinner loading-xs"></span>
+                        <span class="ml-2">Sending...</span>
+                      {:else}
+                        <span>Image preview</span>
+                      {/if}
+                    </h3>
+                    <button disabled={loading} type="button" onclick={removeImage} class="btn btn-ghost btn-circle">
+                      <CircleX />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            {/if}
           {/if}
 
           {#if time_to_commencement > 0}
@@ -312,12 +402,12 @@
       </div>
       {#if time_to_destruction > 0 && time_to_commencement < 0}
         <div class="join">
-          <button onclick={openFileDialog} type="button" class="btn btn-outline btn-circle mr-1" >
+          <button disabled={loading} onclick={openFileDialog} type="button" class="btn btn-outline btn-circle mr-1" >
             <Image />
           </button>
-          <input class="input join-item" bind:value={text} type="text" name="text" placeholder="Say something to the other guy..."/>
+          <input disabled={loading} class="input join-item rounded-l-full" bind:value={text} type="text" name="text" placeholder="Say something to the other guy..."/>
           <div class="card-actions">
-            <button type="submit" onclick={sendText} class="btn btn-primary join-item">
+            <button disabled={loading} type="submit" onclick={sendText} class="btn btn-primary join-item">
               <SendHorizonal/>
             </button>
           </div>
@@ -326,4 +416,10 @@
     </form>
   </div>
 </div>
-
+<div class="toast toast-bottom toast-center">
+  {#each toasts as toast (toast.id) }
+    <div class={`alert alert-${toast.type}`}>
+      <span>{toast.message}</span>
+    </div>
+  {/each}
+</div>
