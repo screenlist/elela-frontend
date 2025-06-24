@@ -2,7 +2,7 @@
   import { onMount, onDestroy, tick } from "svelte"
   import { page, navigating } from "$app/state"
   import { PUBLIC_SERVER, PUBLIC_APP_ENV } from "$env/static/public"
-  import { SendHorizonal, Clock, Image, CircleX } from "@lucide/svelte"
+  import { SendHorizonal, Clock, Image, CircleX, Eye, Info } from "@lucide/svelte"
   import { getCookie } from "$lib/cookie"
   import { sha1 } from 'hash-wasm'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
@@ -38,11 +38,16 @@
 
   let loading = $state(false)
 
+  let open_images = $state(new Map())
+  let opened_images = $state(new Map())
+  let opening = $state(false)
+
   async function sendText(){
     loading = true
     if(image){
       if(sender?.readyState === WebSocket.OPEN){
         const cargo = await uploadImage()
+        console.log(cargo)
         if(cargo){
           sender.send(JSON.stringify({
             type: 'text',
@@ -52,7 +57,7 @@
           removeImage()
           scrollBottom()
           loading = false
-        }
+        } else { loading = false }
       }
     } else {
       if(text.length > 0 && sender?.readyState === WebSocket.OPEN){
@@ -63,7 +68,7 @@
         text = ''
         scrollBottom()
         loading = false
-      }
+      } else { loading = false }
     }
   }
 
@@ -220,17 +225,21 @@
   }
 
   async function uploadImage(){
-    const hash = await sha1(image)
+    const hash = await sha1(new Uint8Array(await image.arrayBuffer()))
     const name = image.name
     const type = image.type
     const size = image.size
-    const response = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${data.bridge.connection_id}`,
+    const response = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${page.params.id}`,
       {
         method: 'POST',
+        credentials: 'include',
         body: JSON.stringify({sha1: hash, type: type, name: name, size: size})
       }
     )
-    if(!response.ok){ addToast({ message: await response.text(), type: 'error', auto: true }); return null; }
+    if(!response.ok){ 
+      addToast({ message: await response.text(), type: 'error', auto: true }); 
+      return null; 
+    }
     const info = await response.json()
     const upload = await fetch(info.url, {
       method: 'POST',
@@ -243,15 +252,44 @@
       },
       body: image
     })
-    if(!upload.ok){ addToast({ message: await upload.text(), type: 'error', auto: true }); return null; }
+    if(!upload.ok){ 
+      addToast({ message: await upload.text(), type: 'error', auto: true }); 
+      return null; 
+    }
     const upload_info = await upload.json()
-    const finish = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${data.bridge.connection_id}?cargo=${info.id}`,{
+    console.log(upload_info)
+    const finish = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${page.params.id}?cargo=${info.id}`,{
       method: 'PATCH',
+      credentials: 'include',
       body: JSON.stringify({file_id: upload_info.fileId})
     })
-    if(!finish.ok){ addToast({ message: await finish.text(), type: 'error', auto: true }); return null; }
+    if(!finish.ok){ 
+      addToast({ message: await finish.text(), type: 'error', auto: true }); 
+      return null; 
+    }
     const cargo = await finish.json()
     return cargo.id
+  }
+
+  async function openChatImage(cargo){
+    opening = true
+    const response = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${page.params.id}?cargo=${cargo}`,
+      {
+        method: 'GET',
+        credentials: 'include'
+      }
+    )
+    if(!response.ok){ 
+      opened_images.set(cargo, await response.text())
+      opening = false
+    } else {
+      const reader = new FileReader()
+      reader.onload = e => { 
+        open_images.set(cargo, e.target.result)
+      }
+      reader.readAsDataURL(await response.blob())
+      opening = true
+    }
   }
   
   onDestroy(() => {
@@ -347,9 +385,41 @@
           {#if time_to_commencement < 0 && time_to_destruction > 0}
             {#each messages as msg }
               <div class={`chat ${msg.in === person ? 'chat-end' : 'chat-start'}`}>
-                <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
-                  {msg.body}
-                </span>
+                {#if msg.has_attachment}
+                  <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
+                    <figure class="flex min-h-45 min-w-45 w-full flex-col items-center justify-center">
+                      {#if !open_images.has(msg.attachment.split(':')[1]) && !opened_images.has(msg.attachment.split(':')[1]) }
+                        {#if opening}
+                          <span class="loading loading-spinner text-neutral"></span>
+                        {:else}
+                          <div role="alert" class="alert alert-soft alert-info">
+                            <Info />
+                            <span>This is an open once image</span>
+                          </div>
+                          <button onclick={() => openChatImage(msg.attachment.split(':')[1])} class="btn btn-circle mt-2">
+                            <Eye />
+                          </button>
+                        {/if}
+                      {:else if open_images.has(msg.attachment.split(':')[1]) && !opened_images.has(msg.attachment.split(':')[1]) }
+                        <img src={open_images.get(msg.attachment.split(':')[1])} alt="Attachment" />
+                      {:else if !open_images.has(msg.attachment.split(':')[1]) && opened_images.has(msg.attachment.split(':')[1]) }
+                        <div role="alert" class="alert alert-soft alert-error">
+                          <Info />
+                          <span>{opened_images.get(msg.attachment.split(':')[1])}</span>
+                        </div>
+                      {:else}
+                        <img src={open_images.get(msg.attachment.split(':')[1])} alt="Attachment" />
+                      {/if}
+                    </figure>
+                    <span>
+                      {msg.body.length > 0 ? msg.body : ''}
+                    </span>
+                  </span>
+                {:else}
+                  <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
+                    {msg.body}
+                  </span>
+                {/if}
               </div>
             {/each}
           {:else if time_to_commencement > 0 && time_to_destruction > 0}
