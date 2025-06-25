@@ -2,7 +2,7 @@
   import { onMount, onDestroy, tick } from "svelte"
   import { page, navigating } from "$app/state"
   import { PUBLIC_SERVER, PUBLIC_APP_ENV } from "$env/static/public"
-  import { SendHorizonal, Clock, Image, CircleX, Eye, Info } from "@lucide/svelte"
+  import { SendHorizonal, Clock, Image, CircleX, Eye, Info, PartyPopper } from "@lucide/svelte"
   import { getCookie } from "$lib/cookie"
   import { sha1 } from 'hash-wasm'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
@@ -38,9 +38,9 @@
 
   let loading = $state(false)
 
-  let open_images = $state(new Map())
-  let opened_images = $state(new Map())
-  let opening = $state(false)
+  let open = $state({})
+  let opened = $state({})
+  let opening = $state({})
 
   async function sendText(){
     loading = true
@@ -272,23 +272,23 @@
   }
 
   async function openChatImage(cargo){
-    opening = true
+    opening[cargo] = true
     const response = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${page.params.id}?cargo=${cargo}`,
       {
         method: 'GET',
         credentials: 'include'
       }
     )
-    if(!response.ok){ 
-      opened_images.set(cargo, await response.text())
-      opening = false
+    if(!response.ok){
+      opened[cargo] = await response.text()
+      opening[cargo] = false
     } else {
       const reader = new FileReader()
-      reader.onload = e => { 
-        open_images.set(cargo, e.target.result)
+      reader.onload = e => {
+        open[cargo] = e.target.result
       }
       reader.readAsDataURL(await response.blob())
-      opening = true
+      opening[cargo] = false
     }
   }
   
@@ -330,7 +330,7 @@
 
   $effect(() => { scrollBottom() })
 
-  $inspect(image).with(console.log)
+  $inspect(open, opened).with(console.log)
 
   function returnLink(){
     if(person === data.bridge.bridge_id && isConnectionAllowed){
@@ -386,35 +386,43 @@
             {#each messages as msg }
               <div class={`chat ${msg.in === person ? 'chat-end' : 'chat-start'}`}>
                 {#if msg.has_attachment}
-                  <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
-                    <figure class="flex min-h-45 min-w-45 w-full flex-col items-center justify-center">
-                      {#if !open_images.has(msg.attachment.split(':')[1]) && !opened_images.has(msg.attachment.split(':')[1]) }
-                        {#if opening}
-                          <span class="loading loading-spinner text-neutral"></span>
-                        {:else}
-                          <div role="alert" class="alert alert-soft alert-info">
-                            <Info />
-                            <span>This is an open once image</span>
-                          </div>
-                          <button onclick={() => openChatImage(msg.attachment.split(':')[1])} class="btn btn-circle mt-2">
-                            <Eye />
-                          </button>
-                        {/if}
-                      {:else if open_images.has(msg.attachment.split(':')[1]) && !opened_images.has(msg.attachment.split(':')[1]) }
-                        <img src={open_images.get(msg.attachment.split(':')[1])} alt="Attachment" />
-                      {:else if !open_images.has(msg.attachment.split(':')[1]) && opened_images.has(msg.attachment.split(':')[1]) }
-                        <div role="alert" class="alert alert-soft alert-error">
-                          <Info />
-                          <span>{opened_images.get(msg.attachment.split(':')[1])}</span>
+                  <div class={`card ${msg.in === person ? 'bg-neutral border-neutral' : 'bg-accent border-accent ml-[0.75rem]'}  border-2  w-80 shadow-sm ${!open[msg.attachment.split(':')[1]] ? 'min-h-65' : ''}`}>
+                    {#if open[msg.attachment.split(':')[1]] && !opened[msg.attachment.split(':')[1]] && !opening[msg.attachment.split(':')[1]] }
+                      <figure class={`w-full rounded-md`} >
+                        <img src={open[msg.attachment.split(':')[1]]} alt="Attachment" />
+                      </figure>
+                      {#if msg.body.length > 0 }
+                        <div class="card-body">
+                          <span class={`text-sm ${msg.in === person ? 'text-base-100' : 'text-neutral'}`}>{msg.body}</span>
                         </div>
-                      {:else}
-                        <img src={open_images.get(msg.attachment.split(':')[1])} alt="Attachment" />
                       {/if}
-                    </figure>
-                    <span>
-                      {msg.body.length > 0 ? msg.body : ''}
-                    </span>
-                  </span>
+                    {:else}
+                      <div class="card-body">
+                        {#if !open[msg.attachment.split(':')[1]] && !opened[msg.attachment.split(':')[1]] && !opening[msg.attachment.split(':')[1]] }
+                          <div class={`flex-1 flex flex-col justify-center items-center ${msg.in === person ? 'text-base-100' : 'text-neutral'}`}>
+                            <PartyPopper />
+                            <span class="mt-4">{msg.in === person ? 'You have sent an open once photo!' : 'You have received an open once photo!'}</span>
+                          </div>
+                        {:else if !open[msg.attachment.split(':')[1]] && opened[msg.attachment.split(':')[1]] && !opening[msg.attachment.split(':')[1]] }
+                          <div class={`flex-1 flex flex-col justify-center items-center ${msg.in === person ? 'text-base-100' : 'text-neutral'}`}>
+                            <Info />
+                            <span class="mt-4">{opened[msg.attachment.split(':')[1]]}</span>
+                          </div>
+                        {:else if opening[msg.attachment.split(':')[1]] }
+                          <div class={`flex-1 flex justify-center items-center ${msg.in === person ? 'text-base-100' : 'text-neutral'}`}>
+                            <span class={`loading loading-spinner`}></span>
+                          </div>
+                        {/if}
+                        {#if !open[msg.attachment.split(':')[1]] && !opened[msg.attachment.split(':')[1]] }
+                          <div class="card-actions items-center justify-center">
+                            <button type="button" onclick={() => openChatImage(msg.attachment.split(':')[1])} class={`btn mt-2 ${msg.in === person ? '' : 'btn-neutral'}`}>
+                              <Eye /> Open
+                            </button>
+                          </div>
+                        {/if}
+                      </div>
+                    {/if}
+                  </div>
                 {:else}
                   <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
                     {msg.body}
@@ -447,7 +455,7 @@
       {#if time_to_destruction > 0 && time_to_commencement < 0}
         {#if preview && image}
           <div class="card bg-neutral border-2 border-neutral w-full shadow-sm">
-            <figure id="prevfig" class="h-[calc(50vh-2rem)] rounded-md overflow-y-auto">
+            <figure id="prevfig" class="max-h-[calc(50vh-2rem)] rounded-md overflow-y-auto">
               <img
                 src={preview}
                 alt="Preview" />
