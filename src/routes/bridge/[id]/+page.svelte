@@ -42,6 +42,10 @@
   let opened = $state({})
   let opening = $state({})
 
+  const formatter = new Intl.NumberFormat('en-ZA', {
+    minimumIntegerDigits: 2,
+  })
+
   async function sendText(){
     loading = true
     if(image){
@@ -370,13 +374,30 @@
           {#if time_to_destruction > 1000 * 60 * 3}
             <progress class="progress progress-primary flex-1" value={time_to_destruction} max={new Date(data.bridge.end_time).valueOf() - new Date(data.bridge.start_time).valueOf()}></progress>
           {/if}
-          <span class={`badge font-semibold ${time_to_destruction > 1000 * 60 * 3 ? 'ml-2 badge-primary' : 'badge-warning flex-1'}`}>
+          <span class={`badge font-semibold ${time_to_destruction > 1000 * 60 * 3 ? 'ml-2 badge-primary' : 'badge-warning flex-1 justify-start'}`}>
             <Clock size={16}/>
-            {
-              time_to_destruction > 1000 * 60 * 3 ? 
-              Math.round( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) ) :
-              `This bridge will collapse in ${Math.floor( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) )} : ${Math.floor( (time_to_destruction % (1000 * 60)) / (1000) )}`
-            }
+            {#if time_to_destruction > 1000 * 60 * 3 }
+              <span class="countdown">
+                <span style={`--value:${formatter.format(Math.floor( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) ))};`} aria-live="polite" aria-label={`${formatter.format(Math.floor( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) ))}`}>
+                  {formatter.format(Math.floor( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) ))}
+                </span>
+                : 
+                <span style={`--value:${formatter.format(Math.floor( (time_to_destruction % (1000 * 60)) / (1000) ))};`} aria-live="polite" aria-label={`${formatter.format(Math.floor( (time_to_destruction % (1000 * 60)) / (1000) ))}`}>
+                  {formatter.format(Math.floor( (time_to_destruction % (1000 * 60)) / (1000) ))}
+                </span>
+              </span>
+            {:else}
+              This bridge will collapse in 
+              <span class="countdown">
+                <span style={`--value:${formatter.format(Math.floor( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) ))};`} aria-live="polite" aria-label={`${formatter.format(Math.floor( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) ))}`}>
+                  {formatter.format(Math.floor( (time_to_destruction % (1000 * 60 * 60)) / (1000 * 60) ))}
+                </span>
+                :
+                <span style={`--value:${formatter.format(Math.floor( (time_to_destruction % (1000 * 60)) / (1000) ))};`} aria-live="polite" aria-label={`${formatter.format(Math.floor( (time_to_destruction % (1000 * 60)) / (1000) ))}`}>
+                  {formatter.format(Math.floor( (time_to_destruction % (1000 * 60)) / (1000) ))}
+                </span>
+              </span>
+            {/if}
           </span>
         </div> 
       {/if}
@@ -415,7 +436,7 @@
                         {/if}
                         {#if !open[msg.attachment.split(':')[1]] && !opened[msg.attachment.split(':')[1]] }
                           <div class="card-actions items-center justify-center">
-                            <button type="button" onclick={() => openChatImage(msg.attachment.split(':')[1])} class={`btn mt-2 ${msg.in === person ? '' : 'btn-neutral'}`}>
+                            <button disabled={opening[msg.attachment.split(':')[1]] ? true : false} type="button" onclick={() => openChatImage(msg.attachment.split(':')[1])} class={`btn mt-2 ${msg.in === person ? '' : 'btn-neutral'}`}>
                               <Eye /> Open
                             </button>
                           </div>
@@ -433,11 +454,23 @@
           {:else if time_to_commencement > 0 && time_to_destruction > 0}
             <div class="flex flex-col w-full justify-center items-center pb-12">
               <div class="radial-progress bg-primary border-primary border-4 text-base-100 text-xl font-semibold" style={`--value:${time_elapsed_before_commencement}; --size:15rem; --thickness: 1rem;`} aria-valuenow={time_elapsed_before_commencement} role="progressbar">
-                <span>
-                  {Math.floor( (time_to_commencement / (1000 * 60 * 60 * 24)) )} : 
-                  {Math.floor( (time_to_commencement % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60) )} : 
-                  {Math.floor( (time_to_commencement % (1000 * 60 * 60)) / (1000 * 60) )} : 
-                  {Math.floor( (time_to_commencement % (1000 * 60)) / (1000) )}
+                <span class="countdown">
+                  <span style={`--value:${Math.floor( (time_to_commencement / (1000 * 60 * 60 * 24)) )};`} aria-live="polite" aria-label={`${Math.floor( (time_to_commencement / (1000 * 60 * 60 * 24)) )}`}>
+                    {Math.floor( (time_to_commencement / (1000 * 60 * 60 * 24)) )}
+                  </span>
+                  d
+                  <span style={`--value:${Math.floor( (time_to_commencement % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60) )};`} aria-live="polite" aria-label={`${Math.floor( (time_to_commencement % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60) )}`}>
+                    {Math.floor( (time_to_commencement % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60) )}
+                  </span>
+                  h
+                  <span style={`--value:${Math.floor( (time_to_commencement % (1000 * 60 * 60)) / (1000 * 60) )};`} aria-live="polite" aria-label={`${Math.floor( (time_to_commencement % (1000 * 60 * 60)) / (1000 * 60) )}`}>
+                    {Math.floor( (time_to_commencement % (1000 * 60 * 60)) / (1000 * 60) )}
+                  </span>
+                  m
+                  <span style={`--value:${Math.floor( (time_to_commencement % (1000 * 60)) / (1000) )};`} aria-live="polite" aria-label={`${Math.floor( (time_to_commencement % (1000 * 60)) / (1000) )}`}>
+                    {Math.floor( (time_to_commencement % (1000 * 60)) / (1000) )}
+                  </span>
+                  s
                 </span>
               </div>
               <h2 class="mt-8 text-lg font-semibold">The bridge will erect soon</h2>
