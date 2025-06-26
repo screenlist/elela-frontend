@@ -53,7 +53,7 @@
       <h1 class="card-title">Drops</h1>
       <div role="alert" class="alert alert-soft alert-info">
         <Info />
-        <span>For crypto currency we accept Avalanche & for fiat currency we accept South African rand.</span>
+        <span>Prices are not billed in US dollar, for crypto currency we accept Avalanche & for fiat currency we accept South African rand.</span>
       </div>
       <fieldset class="fieldset">
         <input id="drops" name="quantity" type="range" min="10" max="1000" bind:value={quantity} class="range w-full" />
