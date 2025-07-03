@@ -1,4 +1,9 @@
-export default function extend_session(){
+import { getCookie } from "./cookie"
+import { PUBLIC_SERVER } from "$env/static/public"
+import { session } from "./expiry.svelte"
+import { setupSessionTimers } from "./session"
+
+export default async function extend_session(){
   await fetch(`/canal/settings/extend`, {
     method: 'POST'
   })
@@ -13,3 +18,14 @@ export default function extend_session(){
     }
   }
 }
+
+async function onExpiry(){
+    await fetch(`/canal/settings/logout`, { method: 'POST' })
+    goto('/')
+    session.expiry = null
+    clearSessionTimers()
+    if(warningOnceOpened){
+      sessionWarningDialog.close()
+      warningOnceOpened = false
+    }
+  }
