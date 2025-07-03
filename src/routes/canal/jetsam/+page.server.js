@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit'
 import { PUBLIC_SERVER } from '$env/static/public'
 
-export async function load({ cookies, url, request }){
+export async function load({ cookies, url, request, depends }){
   const token = cookies.get('access_token')
 
   const upcoming = await fetch(`${PUBLIC_SERVER}/jetsam/unfinished`, {
@@ -21,6 +21,8 @@ export async function load({ cookies, url, request }){
   if(!active.ok){
     error(active.status, { message: await active.text() })
   }
+
+  depends('get:jetsam')
 
   return {upcoming: await upcoming.json(), active: await active.json()}
 }
