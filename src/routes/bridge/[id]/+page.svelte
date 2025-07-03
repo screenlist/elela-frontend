@@ -261,7 +261,6 @@
       return null; 
     }
     const upload_info = await upload.json()
-    console.log(upload_info)
     const finish = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${page.params.id}?cargo=${info.id}`,{
       method: 'PATCH',
       credentials: 'include',
