@@ -1,6 +1,6 @@
 <script>
   import { FileText, FileImage, FileVideo, FileAudio, FileArchive, File, FileCode } from '@lucide/svelte'
-  let { typeInput } = $props()
+  let { typeInput, size } = $props()
   const typePatterns = {
     video: /^video\/.*/,
     image: /^image\/.*/,
@@ -22,19 +22,45 @@
 </script>
 
 {#if type() ===  'video' }
-  <FileVideo/>
+  {#if size}
+    <FileVideo size={size} />
+  {:else}
+    <FileVideo/>
+  {/if}
 {:else if type() ===  'image' }
-  <FileImage />
+  {#if size}
+    <FileImage size={size} />
+  {:else}
+    <FileImage/>
+  {/if}
 {:else if type() ===  'audio' }
-  <FileAudio/>
-{:else if type() ===  'text' }
-  <FileText/>
-{:else if type() ===  'pdf' }
-  <FileText/>
+  {#if size}
+    <FileAudio size={size} />
+  {:else}
+    <FileAudio/>
+  {/if}
+{:else if type() ===  'text' || type() ===  'pdf' }
+  {#if size}
+    <FileText size={size} />
+  {:else}
+    <FileText/>
+  {/if}
 {:else if type() ===  'archive' }
-  <FileArchive/>
+  {#if size}
+    <FileArchive size={size} />
+  {:else}
+    <FileArchive/>
+  {/if}
 {:else if type() ===  'code' }
-  <FileCode/>
+  {#if size}
+    <FileCode size={size} />
+  {:else}
+    <FileCode/>
+  {/if}
 {:else if type() ===  'other' }
-  <File/>
+  {#if size}
+    <File size={size} />
+  {:else}
+    <File/>
+  {/if}
 {/if}
