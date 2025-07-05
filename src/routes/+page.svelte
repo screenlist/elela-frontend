@@ -95,41 +95,41 @@
           <h1 class="card-title uppercase">Canal</h1>
           <span for="passphrase" class="fieldset-legend">Sequence</span>
           <div class="flex items-center justify-between gap-2">
-            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${sequenceInput.length < 2 ? 'bg-primary text-base-100 border-base-100 border-dashed' : 'bg-base-100 border-primary'}`} >
+            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${sequenceInput.length < 2 ? 'bg-accent text-neutral border-accent' : 'bg-neutral border-neutral text-base-100'}`} >
               {sequenceInput[0] ? sequenceInput[0] : '•'}
               {sequenceInput[1] ? sequenceInput[1] : '•'}
             </span>
             <span class="font-bold text-lg">:</span>
-            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${sequenceInput.length >= 2 && sequenceInput.length < 4 ? 'bg-primary text-base-100 border-base-100 border-dashed' : 'bg-base-100 border-primary'}`} >
+            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${sequenceInput.length >= 2 && sequenceInput.length < 4 ? 'bg-accent text-neutral border-accent' : 'bg-neutral border-neutral text-base-100'}`} >
               {sequenceInput[2] ? sequenceInput[2] : '•'}
               {sequenceInput[3] ? sequenceInput[3] : '•'}
             </span>
             <span class="font-bold text-lg">:</span>
-            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${sequenceInput.length >= 4 ? 'bg-primary text-base-100 border-base-100 border-dashed' : 'bg-base-100 border-primary'}`} >
+            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${sequenceInput.length >= 4 ? 'bg-accent text-neutral border-accent' : 'bg-neutral border-neutral text-base-100'}`} >
               {sequenceInput[4] ? sequenceInput[4] : '•'}
               {sequenceInput[5] ? sequenceInput[5] : '•'}
             </span>
           </div>
           {#if !salt && !sequence}
-            <div class="grid auto-rows-auto grid-cols-6 gap-4 mt-2 mb-2">
+            <div class="grid auto-rows-auto grid-cols-6 gap-2 mt-2 mb-2 w-full">
               {#each alphabet as letter}
                 <button onclick={() => {
                   if(sequenceInput.length < 6){
                     sequenceInput += letter
                   }
-                }} type="button" class="btn btn-neutral btn-circle" >{letter}</button>
+                }} type="button" class="btn btn-neutral btn-square w-full" >{letter}</button>
               {/each}
               <button onclick={() => {
                   if(sequenceInput.length > 0){
                     sequenceInput = sequenceInput.split('').filter((_, i, arr) => i !== arr.length - 1).join('')
                   }
-                }} type="button" class="btn btn-error btn-circle" >
+                }} type="button" class="btn btn-error btn-square w-full" >
                 <Delete/>
               </button>
-              <button onclick={pasteSequence} type="button" class="btn btn-outline btn-circle" >
+              <button onclick={pasteSequence} type="button" class="btn btn-outline btn-square w-full" >
                 <ClipboardPaste />
               </button>
-              <button disabled={sequenceInput.length !== 6 ? true : false} onclick={getSalt} type="button" class="btn btn-primary col-span-2 col-start-5" >Find</button>
+              <button disabled={sequenceInput.length !== 6 ? true : false} onclick={getSalt} type="button" class="btn btn-primary col-span-2 col-start-5 w-full" >Find</button>
             </div>
           {:else}
             <fieldset class="fieldset">
