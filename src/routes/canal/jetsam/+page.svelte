@@ -98,7 +98,6 @@
   async function uploadCargo(){
     if(!file) return
 
-    const chunk_size = 6 * ( 1024 ** 2 )
     const is_big_size = 9 * ( 1024 ** 2 )
     
     loading = true
@@ -171,6 +170,7 @@
       await invalidate('get:jetsam')
     } else {
 
+      const chunk_size = 6 * ( 1024 ** 2 )
       const total_chunks = Math.ceil(size / chunk_size)
       const chunks = []
 
@@ -179,11 +179,12 @@
         const end = Math.min(start + chunk_size, size)
         const chunk = await file.slice(start, end).arrayBuffer()
         const chunk_hash = await sha1(new Uint8Array(chunk))
-        const chunk_size = chunk.byteLength
+        const chunk_size_current = chunk.byteLength
         chunks.push({
-          index: i,
+          index: 1+i,
           sha1: chunk_hash,
-          size: chunk_size
+          size: chunk_size_current,
+          slice: chunk
         })
       }
 
@@ -221,7 +222,7 @@
               'Content-Length': chunk.size,
               'X-Bz-Content-Sha1': chunk.sha1
             },
-            body: file
+            body: chunk.slice
           })
           const upload_info = await upload.json()
 
@@ -273,7 +274,11 @@
 
       loading = false
       uploading = false
-      await invalidate()
+      input_file = null
+      total_costs = 0
+      downloads = 0
+      retention = 0
+      await invalidate('get:jetsam')
     }
   }
   
@@ -306,7 +311,7 @@
 
   onDestroy(() => {cleanupToasts()})
 
-  $inspect(loading, uploading, input_file).with(console.log)
+  // $inspect(loading, uploading, input_file).with(console.log)
 </script>
 
 <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
