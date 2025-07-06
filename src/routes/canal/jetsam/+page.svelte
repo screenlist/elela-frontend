@@ -1,5 +1,5 @@
 <script>
-  import { CirclePlus, Download, Eye, Info, MessageCircle, Phone } from "@lucide/svelte";
+  import { CirclePlus, Download, Eye, Info, MessageCircle, Phone, Trash2, CircleX } from "@lucide/svelte";
   import { enhance } from '$app/forms'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
@@ -12,6 +12,16 @@
   import { page } from "$app/state"
 
   let { data } = $props()
+
+  let cargo_info_modal
+  let cargo_info = $state({
+    name: '',
+    downloads_left: 0,
+    drops: '',
+    type: '',
+    size: 0,
+    is_public: false,
+  })
   
   let bridge = $state(null)
   let input_file = $state(null)
@@ -24,6 +34,28 @@
 
   let large_progress = $state(0)
   let uploading = $state(false)
+
+  function getType (type) {
+    const typePatterns = {
+      video: /^video\/.*/,
+      image: /^image\/.*/,
+      audio: /^audio\/.*/,
+      text: /^text\/.*/,
+      pdf: /^application\/pdf$/,
+      archive: /^application\/(x-.*|zip|vnd\.rar|x-tar|gzip|x-7z-compressed|x-bzip2)$/,
+      code: /^(text\/(x-.*|javascript|json|xml)|application\/(javascript|json|xml|x-.*script|wasm))$/,
+    }
+    for (const [category, pattern] of Object.entries(typePatterns)) {
+      if (pattern.test(type)) {
+        return category
+      }
+    }
+    return 'file'
+  }
+
+  function openCargoModal(){ cargo_info_modal.showModal() }
+
+  function closeCargoModal(){ cargo_info_modal.close() }
 
   function copyFlare(){
     navigator.clipboard.writeText(bridge.public_code)
@@ -317,10 +349,20 @@
                   </div>
                   <div>
                     <div>{cargo.name}</div>
-                    <div class="text-xs uppercase font-semibold opacity-60">Ends in {Math.ceil( (new Date(data.end_time).valueOf() - Date.now()) / (1000*60) )} mins</div>
+                    <div class="text-xs uppercase font-semibold opacity-60">Expires in {Math.floor( ( ( new Date(cargo.storage_valid_until).valueOf() - Date.now() ) / (1000 * 60 * 60 * 24)) )} days</div>
                   </div>
-                  <button class="btn btn-square btn-ghost">
-                    <Download />
+                  <button onclick={() => {
+                    cargo_info = {
+                      name: cargo.name,
+                      is_public: cargo.is_public,
+                      type: getType(cargo.content_type),
+                      downloads_left: cargo.downloads_total - cargo.downloads_count,
+                      size: cargo.size,
+                      drops: ( cargo.subpoints / 100 ).toFixed(2)
+                    }
+                    openCargoModal()
+                  }} class="btn btn-square btn-neutral">
+                    <Info />
                   </button>
                 </li>
               {/each}
@@ -331,11 +373,58 @@
     </section>
   </div>
 </div>
-
 <div class="toast toast-bottom toast-center">
   {#each toasts as toast (toast.id) }
     <div class={`alert alert-${toast.type}`}>
       <span>{toast.message}</span>
     </div>
   {/each}
+</div>
+<div>
+  <dialog bind:this={cargo_info_modal} class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box bg-neutral text-base-100">
+      <form method="dialog">
+        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-4.5">
+          <CircleX />
+        </button>
+      </form>
+      <h3 class="text-lg font-bold uppercase">{cargo_info.type}</h3>
+      <div class="flex flex-col gap-3 mt-2 mb-4 w-full">
+        <span class="text-wrap overflow-ellipsis wrap-anywhere font-mono font-bold">{cargo_info.name}</span>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Size</p>
+          <span class="flex-1 wrap-anywhere">
+            {
+            cargo_info.size > 100 * (1024**2) ? 
+            `${( Math.round( (cargo_info.size / (1024 ** 3)) * 100 ) / 100 ).toFixed(2)} GB` : 
+            `${( Math.round( (cargo_info.size / (1024 ** 2)) * 100 ) / 100 ).toFixed(2)} MB`
+            }
+          </span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Access</p>
+          <span class="flex-1">{cargo_info.is_public ? 'Public' : 'Private'}</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Downloads</p>
+          <span class="flex-1">{cargo_info.downloads_left}</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Cost</p>
+          <span class="flex-1">{cargo_info.drops} Drops</span>
+        </div>
+      </div>
+      <div class="modal-action">
+        <button class="btn btn-error" onclick={''}>
+          <Trash2 />
+        </button>
+        <button class="btn" onclick={''}>
+          <Download />
+        </button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>Close</button>
+    </form>
+  </dialog>
 </div>
