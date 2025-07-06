@@ -61,27 +61,22 @@
       <div class="flex flex-col gap-3 mt-2 mb-4">
         <div class="flex flex-row w-full">
           <p class="flex-1">Since</p>
-
           <span class="flex-1">{new Date(data.session.created_at).toLocaleDateString('en-ZA', { hour: 'numeric', minute: 'numeric', second: 'numeric' })}</span>
         </div>
         <div class="flex flex-row w-full">
           <p class="flex-1">Until</p>
-
           <span class="flex-1">{new Date(data.session.expires_at).toLocaleDateString('en-ZA', { hour: 'numeric', minute: 'numeric', second: 'numeric' })}</span>
         </div>
         <div class="flex flex-row w-full">
           <p class="flex-1">Device</p>
-
           <span class="flex-1">{data.session.device}</span>
         </div>
         <div class="flex flex-row w-full">
           <p class="flex-1">Browser</p>
-
           <span class="flex-1">{data.session.browser}</span>
         </div>
         <div class="flex flex-row w-full">
           <p class="flex-1">Operation System</p>
-
           <span class="flex-1">{data.session.os}</span>
         </div>
       </div>
