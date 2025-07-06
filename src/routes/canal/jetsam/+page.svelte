@@ -21,7 +21,9 @@
     type: '',
     size: 0,
     is_public: false,
+    id: ''
   })
+  let cargo_loading = $state(false)
   
   let bridge = $state(null)
   let input_file = $state(null)
@@ -34,6 +36,18 @@
 
   let large_progress = $state(0)
   let uploading = $state(false)
+
+  function resetCargoInfo(){
+    cargo_info = {
+      name: '',
+      downloads_left: 0,
+      drops: '',
+      type: '',
+      size: 0,
+      is_public: false,
+      id: ''
+    }
+  }
 
   function getType (type) {
     const typePatterns = {
@@ -60,6 +74,25 @@
   function copyFlare(){
     navigator.clipboard.writeText(bridge.public_code)
     addToast({ message: 'Flare successfully copied to clipboard', type: 'success', auto: true })
+  }
+
+  async function deleteCargo(){
+    cargo_loading = true
+    const response = await fetch(`${PUBLIC_SERVER}/jetsam/cargo/${cargo_info.id.split(':')[1]}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+    
+    if(!response.ok){
+      cargo_loading = false
+      addToast({ message: await response.text(), type: 'error', auto: true })
+    } else {
+      cargo_loading = false
+      await invalidate('get:jetsam')
+      closeCargoModal()
+      addToast({ message: 'Cargo successfully deleted', type: 'success', auto: true })
+      resetCargoInfo()
+    }
   }
 
   async function uploadCargo(){
@@ -132,6 +165,9 @@
       loading = false
       uploading = false
       input_file = null
+      total_costs = 0
+      downloads = 0
+      retention = 0
       await invalidate('get:jetsam')
     } else {
 
@@ -358,7 +394,8 @@
                       type: getType(cargo.content_type),
                       downloads_left: cargo.downloads_total - cargo.downloads_count,
                       size: cargo.size,
-                      drops: ( cargo.subpoints / 100 ).toFixed(2)
+                      drops: ( cargo.subpoints / 100 ).toFixed(2),
+                      id: cargo.id
                     }
                     openCargoModal()
                   }} class="btn btn-square btn-neutral">
@@ -373,13 +410,6 @@
     </section>
   </div>
 </div>
-<div class="toast toast-bottom toast-center">
-  {#each toasts as toast (toast.id) }
-    <div class={`alert alert-${toast.type}`}>
-      <span>{toast.message}</span>
-    </div>
-  {/each}
-</div>
 <div>
   <dialog bind:this={cargo_info_modal} class="modal modal-bottom sm:modal-middle">
     <div class="modal-box bg-neutral text-base-100">
@@ -389,36 +419,42 @@
         </button>
       </form>
       <h3 class="text-lg font-bold uppercase">{cargo_info.type}</h3>
-      <div class="flex flex-col gap-3 mt-2 mb-4 w-full">
-        <span class="text-wrap overflow-ellipsis wrap-anywhere font-mono font-bold">{cargo_info.name}</span>
-        <div class="flex flex-row w-full justify-between">
-          <p class="w-1/3">Size</p>
-          <span class="flex-1 wrap-anywhere">
-            {
-            cargo_info.size > 100 * (1024**2) ? 
-            `${( Math.round( (cargo_info.size / (1024 ** 3)) * 100 ) / 100 ).toFixed(2)} GB` : 
-            `${( Math.round( (cargo_info.size / (1024 ** 2)) * 100 ) / 100 ).toFixed(2)} MB`
-            }
-          </span>
+      {#if cargo_loading }
+        <div class="flex justify-center items-center h-50 sm:h-44 w-full">
+          <span class="loading loading-spinner text-base-100"></span>
         </div>
-        <div class="flex flex-row w-full justify-between">
-          <p class="w-1/3">Access</p>
-          <span class="flex-1">{cargo_info.is_public ? 'Public' : 'Private'}</span>
+      {:else}
+        <div class="flex flex-col gap-3 mt-2 mb-4 w-full">
+          <span class="text-wrap overflow-ellipsis wrap-anywhere font-mono font-bold">{cargo_info.name}</span>
+          <div class="flex flex-row w-full justify-between">
+            <p class="w-1/3">Size</p>
+            <span class="flex-1 wrap-anywhere">
+              {
+              cargo_info.size > 100 * (1024**2) ? 
+              `${( Math.round( (cargo_info.size / (1024 ** 3)) * 100 ) / 100 ).toFixed(2)} GB` : 
+              `${( Math.round( (cargo_info.size / (1024 ** 2)) * 100 ) / 100 ).toFixed(2)} MB`
+              }
+            </span>
+          </div>
+          <div class="flex flex-row w-full justify-between">
+            <p class="w-1/3">Access</p>
+            <span class="flex-1">{cargo_info.is_public ? 'Public' : 'Private'}</span>
+          </div>
+          <div class="flex flex-row w-full justify-between">
+            <p class="w-1/3">Downloads</p>
+            <span class="flex-1">{cargo_info.downloads_left}</span>
+          </div>
+          <div class="flex flex-row w-full justify-between">
+            <p class="w-1/3">Cost</p>
+            <span class="flex-1">{cargo_info.drops} Drops</span>
+          </div>
         </div>
-        <div class="flex flex-row w-full justify-between">
-          <p class="w-1/3">Downloads</p>
-          <span class="flex-1">{cargo_info.downloads_left}</span>
-        </div>
-        <div class="flex flex-row w-full justify-between">
-          <p class="w-1/3">Cost</p>
-          <span class="flex-1">{cargo_info.drops} Drops</span>
-        </div>
-      </div>
+      {/if}
       <div class="modal-action">
-        <button class="btn btn-error" onclick={''}>
+        <button disabled={cargo_loading} class="btn btn-error" onclick={deleteCargo}>
           <Trash2 />
         </button>
-        <button class="btn" onclick={''}>
+        <button disabled={cargo_loading} class="btn" onclick={''}>
           <Download />
         </button>
       </div>
@@ -427,4 +463,11 @@
       <button>Close</button>
     </form>
   </dialog>
+</div>
+<div class="toast toast-top toast-center z-400000000000">
+  {#each toasts as toast (toast.id) }
+    <div class={`alert alert-${toast.type}`}>
+      <span>{toast.message}</span>
+    </div>
+  {/each}
 </div>
