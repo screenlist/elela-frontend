@@ -12,7 +12,7 @@ export async function addToast(toast) {
   if (toast.auto) {
     newToast.timeoutId = setTimeout(() => dismissToast(id), 1000*5)
   }
-  console.log(newToast)
+  
   return id
 }
 
