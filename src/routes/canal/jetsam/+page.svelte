@@ -281,6 +281,27 @@
       await invalidate('get:jetsam')
     }
   }
+
+  async function downloadCargo(){
+    cargo_loading = true
+    const res = await fetch(`${PUBLIC_SERVER}/jetsam/cargo/${cargo_info.id.split(':')[1]}/download`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+    if(!res.ok){
+      cargo_loading = false
+      addToast({ message: await res.text(), type: 'error', auto: true })
+    } else {
+      await invalidate('get:jetsam')
+      addToast({ message: 'Download starting now...', type: 'success', auto: true })
+      cargo_loading = false
+      const a = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(await res.blob()),
+        download: cargo_info.name
+      })
+      a.click()
+    }
+  }
   
   $effect(async () => {
     if(file){
@@ -309,9 +330,18 @@
     }
   })
 
+  $effect(() => {
+    if(data.active){
+      if(cargo_info.id.length > 0){
+        const new_cargo = data.active.find(val => val.id === cargo_info.id)
+        cargo_info.downloads_left = new_cargo.downloads_total - new_cargo.downloads_count
+      }
+    }
+  })
+
   onDestroy(() => {cleanupToasts()})
 
-  // $inspect(loading, uploading, input_file).with(console.log)
+  $inspect(cargo_info).with(console.log)
 </script>
 
 <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
@@ -415,61 +445,66 @@
     </section>
   </div>
 </div>
-<div>
-  <dialog bind:this={cargo_info_modal} class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box bg-neutral text-base-100">
-      <form method="dialog">
-        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-4.5">
-          <CircleX />
-        </button>
-      </form>
-      <h3 class="text-lg font-bold uppercase">{cargo_info.type}</h3>
-      {#if cargo_loading }
-        <div class="flex justify-center items-center h-50 sm:h-44 w-full">
-          <span class="loading loading-spinner text-base-100"></span>
-        </div>
-      {:else}
-        <div class="flex flex-col gap-3 mt-2 mb-4 w-full">
-          <span class="text-wrap overflow-ellipsis wrap-anywhere font-mono font-bold">{cargo_info.name}</span>
-          <div class="flex flex-row w-full justify-between">
-            <p class="w-1/3">Size</p>
-            <span class="flex-1 wrap-anywhere">
-              {
-              cargo_info.size > 100 * (1024**2) ? 
-              `${( Math.round( (cargo_info.size / (1024 ** 3)) * 100 ) / 100 ).toFixed(2)} GB` : 
-              `${( Math.round( (cargo_info.size / (1024 ** 2)) * 100 ) / 100 ).toFixed(2)} MB`
-              }
-            </span>
-          </div>
-          <div class="flex flex-row w-full justify-between">
-            <p class="w-1/3">Access</p>
-            <span class="flex-1">{cargo_info.is_public ? 'Public' : 'Private'}</span>
-          </div>
-          <div class="flex flex-row w-full justify-between">
-            <p class="w-1/3">Downloads</p>
-            <span class="flex-1">{cargo_info.downloads_left}</span>
-          </div>
-          <div class="flex flex-row w-full justify-between">
-            <p class="w-1/3">Cost</p>
-            <span class="flex-1">{cargo_info.drops} Drops</span>
-          </div>
-        </div>
-      {/if}
-      <div class="modal-action">
-        <button disabled={cargo_loading} class="btn btn-error" onclick={deleteCargo}>
-          <Trash2 />
-        </button>
-        <button disabled={cargo_loading} class="btn" onclick={''}>
-          <Download />
-        </button>
-      </div>
-    </div>
-    <form method="dialog" class="modal-backdrop">
-      <button>Close</button>
+<dialog bind:this={cargo_info_modal} class="modal modal-bottom sm:modal-middle">
+  <div class="modal-box bg-neutral text-base-100">
+    <form method="dialog">
+      <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-4.5">
+        <CircleX />
+      </button>
     </form>
-  </dialog>
-</div>
-<div class="toast toast-top toast-center z-400000000000">
+    <h3 class="text-lg font-bold uppercase">{cargo_info.type}</h3>
+    {#if cargo_loading }
+      <div class="flex justify-center items-center h-50 sm:h-44 w-full">
+        <span class="loading loading-spinner text-base-100"></span>
+      </div>
+    {:else}
+      <div class="flex flex-col gap-3 mt-2 mb-4 w-full">
+        <span class="text-wrap overflow-ellipsis wrap-anywhere font-mono font-bold">{cargo_info.name}</span>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Size</p>
+          <span class="flex-1 wrap-anywhere">
+            {
+            cargo_info.size > 100 * (1024**2) ? 
+            `${( Math.round( (cargo_info.size / (1024 ** 3)) * 100 ) / 100 ).toFixed(2)} GB` : 
+            `${( Math.round( (cargo_info.size / (1024 ** 2)) * 100 ) / 100 ).toFixed(2)} MB`
+            }
+          </span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Access</p>
+          <span class="flex-1">{cargo_info.is_public ? 'Public' : 'Private'}</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Downloads</p>
+          <span class="flex-1">{cargo_info.downloads_left}</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Cost</p>
+          <span class="flex-1">{cargo_info.drops} Drops</span>
+        </div>
+      </div>
+    {/if}
+    <div class="modal-action">
+      <button disabled={cargo_loading} class="btn btn-error" onclick={deleteCargo}>
+        <Trash2 />
+      </button>
+      <button disabled={cargo_loading} class="btn" onclick={downloadCargo}>
+        <Download />
+      </button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>Close</button>
+  </form>
+  <div class="toast toast-top toast-center !z-[10000]">
+    {#each toasts as toast (toast.id) }
+      <div class={`alert alert-${toast.type}`}>
+        <span>{toast.message}</span>
+      </div>
+    {/each}
+  </div>
+</dialog>
+<div class="toast toast-top toast-center !z-[10000]">
   {#each toasts as toast (toast.id) }
     <div class={`alert alert-${toast.type}`}>
       <span>{toast.message}</span>
