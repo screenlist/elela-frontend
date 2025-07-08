@@ -10,6 +10,7 @@
   import { sha1 } from "hash-wasm"
   import { invalidate } from "$app/navigation"
   import { page } from "$app/state"
+  import size from "$lib/size"
 
   let { data } = $props()
 
@@ -420,7 +421,7 @@
                   </div>
                   <div>
                     <div>{cargo.name}</div>
-                    <div class="text-xs uppercase font-semibold opacity-60">Expires in {Math.floor( ( ( new Date(cargo.storage_valid_until).valueOf() - Date.now() ) / (1000 * 60 * 60 * 24)) )} days</div>
+                    <div class="text-xs uppercase font-semibold opacity-60">{size(cargo.size)}, {Math.floor( ( ( new Date(cargo.storage_valid_until).valueOf() - Date.now() ) / (1000 * 60 * 60 * 24)) )} days</div>
                   </div>
                   <button onclick={() => {
                     cargo_info = {
@@ -463,11 +464,7 @@
         <div class="flex flex-row w-full justify-between">
           <p class="w-1/3">Size</p>
           <span class="flex-1 wrap-anywhere">
-            {
-            cargo_info.size > 100 * (1024**2) ? 
-            `${( Math.round( (cargo_info.size / (1024 ** 3)) * 100 ) / 100 ).toFixed(2)} GB` : 
-            `${( Math.round( (cargo_info.size / (1024 ** 2)) * 100 ) / 100 ).toFixed(2)} MB`
-            }
+            {size(cargo_info.size)}
           </span>
         </div>
         <div class="flex flex-row w-full justify-between">
