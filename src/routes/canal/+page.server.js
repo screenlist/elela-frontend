@@ -11,6 +11,10 @@ export async function load({ cookies, url }){
     method: 'GET',
     headers: { 'Authorization': `Bearer ${token}` }
   })
+  const jetsamStatisticsRes = await fetch(`${PUBLIC_SERVER}/jetsam/statistics`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
 
   if(!sessionRes.ok){
     error(sessionRes.status, { message: await sessionRes.text() })
@@ -20,5 +24,9 @@ export async function load({ cookies, url }){
     error(statisticsRes.status, { message: await statisticsRes.text() })
   }
 
-  return {session: await sessionRes.json(), statistics: await statisticsRes.json()}
+  if(!jetsamStatisticsRes.ok){
+    error(jetsamStatisticsRes.status, { message: await jetsamStatisticsRes.text() })
+  }
+
+  return {session: await sessionRes.json(), statistics: await statisticsRes.json(), jetsam: await jetsamStatisticsRes.json()}
 }

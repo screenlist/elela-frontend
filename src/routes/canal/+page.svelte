@@ -3,6 +3,7 @@
   import { setupSessionTimers, clearSessionTimers } from '$lib/session'
   import { session } from '$lib/expiry.svelte'
   import { Clock, Lock, LockOpen, MessageCircle, Info } from '@lucide/svelte';
+    import size from '$lib/size.js';
 
   let { data } = $props()
   async function onExit(){
@@ -11,6 +12,7 @@
     session.expiry = null
     clearSessionTimers()
   }
+  console.log(data.jetsam)
 </script>
 
 <div class="grid auto-rows-auto grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-4">
@@ -148,6 +150,32 @@
       </div>
       <div class="card-actions justify-end">
         <a href="/canal/bridges#active" class="btn btn-outline uppercase w-1/2">View</a>
+      </div>
+    </section>
+  </div>
+  <div class="card card-border card-sm bg-base-300 w-full h-full">
+    <section class="card-body justify-between">
+      <h2 class="card-title">Cargo</h2>
+      <div class="flex flex-col gap-3 mt-2 mb-4">
+        <div class="flex flex-row w-full">
+          <p class="flex-1">Storage</p>
+          <span class="flex-1">{size(data.jetsam.total_size)}</span>
+        </div>
+        <div class="flex flex-row w-full">
+          <p class="flex-1">Private</p>
+          <span class="flex-1">{data.jetsam.cargo_private}</span>
+        </div>
+        <div class="flex flex-row w-full">
+          <p class="flex-1">Public</p>
+          <span class="flex-1">{data.jetsam.cargo_public}</span>
+        </div>
+        <div class="flex flex-row w-full">
+          <p class="flex-1">Cost</p>
+          <span class="flex-1">{(data.jetsam.total_subpoints/100).toFixed(2)}</span>
+        </div>
+      </div>
+      <div class="card-actions justify-end">
+        <a href="/canal/jetsam" class="btn btn-outline uppercase w-1/2">View</a>
       </div>
     </section>
   </div>
