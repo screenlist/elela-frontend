@@ -1,9 +1,9 @@
 <script>
   import { goto } from '$app/navigation'
-  import { setupSessionTimers, clearSessionTimers } from '$lib/session'
+  import { clearSessionTimers } from '$lib/session'
   import { session } from '$lib/expiry.svelte'
   import { Clock, Lock, LockOpen, MessageCircle, Info } from '@lucide/svelte';
-    import size from '$lib/size.js';
+  import size from '$lib/size.js';
 
   let { data } = $props()
   async function onExit(){
@@ -12,7 +12,6 @@
     session.expiry = null
     clearSessionTimers()
   }
-  console.log(data.jetsam)
 </script>
 
 <div class="grid auto-rows-auto grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-4">

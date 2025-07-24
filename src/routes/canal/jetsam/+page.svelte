@@ -341,8 +341,6 @@
   })
 
   onDestroy(() => {cleanupToasts()})
-
-  $inspect(cargo_info).with(console.log)
 </script>
 
 <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
