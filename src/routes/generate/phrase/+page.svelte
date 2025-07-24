@@ -80,15 +80,7 @@
       <h1 class="card-title uppercase">Canal <span class="badge badge-neutral">{data.letter_sequence}</span></h1>
       <div role="alert" class="alert alert-warning w-full">
         <Info />
-        <span>Do not refresh this page.</span>
-      </div>
-      <div role="alert" class="alert alert-warning w-full">
-        <Info />
-        <span>These details will only be displayed once, click save.</span>
-      </div>
-      <div role="alert" class="alert alert-info w-full">
-        <Info />
-        <span>This information cannot be reset, never lose it.</span>
+        <span>Do not refresh this page. These details will only be displayed once, click save. This information cannot be reset, never lose it.</span>
       </div>
       <span class="font-mono w-full m-4 p-6 bg-base-300 font-semibold text-base border-dashed border-1 rounded-lg border-neutral">
         {#if loading || !passphrase}
