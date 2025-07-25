@@ -79,11 +79,11 @@
         <fieldset class="fieldset">
           <label for="flare" class="fieldset-legend">Flare</label>
           <span class="label">The initial phrase as exposed to you by a sailor</span>
-          <input id="flare" name="flare" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
+          <input id="flare" autocomplete="off" name="flare" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
           <div class="divider"></div>
           <label for="counterflare" class="fieldset-legend">Response Flare</label>
           <span class="label">A two word reply phrase of at least 4 letters each</span>
-          <input id="counterflare" name="counterflare" type="text" class="input w-full" placeholder="calmly breathe" />
+          <input id="counterflare" autocomplete="off" name="counterflare" type="text" class="input w-full" placeholder="calmly breathe" />
           <div role="alert" class="alert alert-soft alert-info">
             <Info />
             <span>The phrase will form a part of the counterflare which you must show to the creator of the flare</span>

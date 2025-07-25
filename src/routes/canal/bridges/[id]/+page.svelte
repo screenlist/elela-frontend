@@ -95,7 +95,7 @@
         <h1 class="card-title">Connect</h1>
         <fieldset class="fieldset">
           <label for="counterflare" class="label">Response Flare</label>
-          <input name="counterflare" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
+          <input name="counterflare" autocomplete="off" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
           <div role="alert" class="alert alert-soft alert-info">
             <Info />
             <span>This is the response flare that you want to establish connection with</span>

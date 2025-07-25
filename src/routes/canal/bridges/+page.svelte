@@ -45,7 +45,7 @@
         <fieldset class="fieldset">
           <label for="flare" class="fieldset-legend">Flare</label>
           <span class="label">A two word phrase of at least 4 letters each</span>
-          <input name="flare" type="text" class="input w-full" placeholder="worries aplenty" />
+          <input name="flare" autocomplete="off" type="text" class="input w-full" placeholder="worries aplenty" />
           <div class="divider"></div>
           <p class="fieldset-legend">Schedule</p>
           <label for="date" class="label">Date</label>

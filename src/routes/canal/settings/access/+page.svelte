@@ -98,7 +98,7 @@
         <span class="badge badge-neutral">{secret}</span>
         <fieldset class="fieldset">
           <legend class="fieldset-legend">Code</legend>
-          <input name="totp_token" type="text" class="input" placeholder="Enter code" />
+          <input name="totp_token" autocomplete="off" type="text" class="input" placeholder="Enter code" />
         </fieldset>
         <div class="card-actions mt-4">
           <button class="btn btn-neutral">Enable</button>

@@ -513,7 +513,7 @@
           <button disabled={loading} onclick={openFileDialog} type="button" class="btn btn-outline btn-circle mr-1" >
             <Image />
           </button>
-          <input disabled={loading} class="input join-item rounded-l-full" bind:value={text} type="text" name="text" placeholder="Say something to the other guy..."/>
+          <input disabled={loading} autocomplete="off" class="input join-item rounded-l-full" bind:value={text} type="text" name="text" placeholder="Say something to the other guy..."/>
           <div class="card-actions">
             <button disabled={loading} type="submit" onclick={sendText} class="btn btn-primary join-item">
               <SendHorizonal/>

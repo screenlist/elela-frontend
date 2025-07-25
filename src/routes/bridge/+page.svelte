@@ -178,9 +178,9 @@
         </div>
         <fieldset class="fieldset">
             <label for="flare" class="label">Flare</label>
-            <input name="flare" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
+            <input name="flare" autocomplete="off" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
             <label for="counterflare" class="label">Response Flare</label>
-            <input name="counterflare" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
+            <input name="counterflare" autocomplete="off" type="text" class="input w-full" placeholder="😮👨🏽 calmly breathe 🧘🏽‍♀️" />
             <label for="passphrase" class="label">Anchor</label>
             <input name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
         </fieldset>
