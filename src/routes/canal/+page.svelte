@@ -170,7 +170,7 @@
         </div>
         <div class="flex flex-row w-full">
           <p class="flex-1">Cost</p>
-          <span class="flex-1">{(data.jetsam.total_subpoints/100).toFixed(2)}</span>
+          <span class="flex-1">{(data.jetsam.total_subpoints/100).toFixed(2)} Drops</span>
         </div>
       </div>
       <div class="card-actions justify-end">
