@@ -104,8 +104,8 @@
     const metadata = {
       name: 'Elela',
       description: 'Anonymity at your fingertips',
-      url: 'https://elela.online', // origin must match your domain & subdomain
-      icons: ['https://avatars.githubusercontent.com/u/179229932']
+      url: 'https://app.elela.online', // origin must match your domain & subdomain
+      icons: ['https://app.elela.online/icon-dark.svg']
     }
 
     modal = createAppKit({
