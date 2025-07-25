@@ -333,8 +333,6 @@
 
   $effect(() => { scrollBottom() })
 
-  $inspect(open, opened).with(console.log)
-
   function returnLink(){
     if(person === data.bridge.bridge_id && isConnectionAllowed){
       return '/canal/bridges/'+data.bridge.bridge_id.split(':')[1]
