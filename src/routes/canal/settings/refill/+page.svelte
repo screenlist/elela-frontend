@@ -51,7 +51,7 @@
 <section class="card bg-base-200 min-h-[70vh] w-full">
   <div class="card-body">
     <h2 class="card-title">Refill</h2>
-    {#if !data.canal.is_premium }
+    {#if !data.canal.usage.is_premium }
       <div role="alert" class="alert alert-warning alert-soft">
         <Info />
         <span>This feature is for premium canals, <a class="link" href="/generate/buy">get yours</a>.</span>

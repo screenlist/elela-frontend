@@ -366,7 +366,7 @@
             <span>This action will cost more drops than available in your canal, <a class="link" href="/canal/settings/refill">please refill</a>.</span>
           </div>
         {/if}
-        {#if !data.canal.is_premium }
+        {#if !data.canal.usage.is_premium }
           <div role="alert" class="alert alert-warning alert-soft">
             <Info />
             <span>This feature is for premium canals, <a class="link" href="/generate/buy">get yours</a>.</span>
