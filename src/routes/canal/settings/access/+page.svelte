@@ -63,8 +63,15 @@
           await update()
         }
       }}>
-        <p class="alert alert-soft alert-info mb-4"><Info/>After initiating the setup do not refresh the page until you have enabled secure access, otherwise you will need to wait at least 3 minutes before you can restart.</p>
-        <div class="card-actions">
+        {#if !data.canal.is_premium }
+          <div role="alert" class="alert alert-warning alert-soft">
+            <Info />
+            <span>This feature is for premium canals, <a class="link" href="/generate/buy">get yours</a>.</span>
+          </div>
+        {:else}
+          <p class="alert alert-soft alert-info mb-4"><Info/>After initiating the setup do not refresh the page until you have enabled secure access, otherwise you will need to wait at least 3 minutes before you can restart.</p>
+        {/if}
+        <div class="card-actions mt-4">
           <button class="btn btn-neutral">Setup</button>
         </div>
       </form>
@@ -93,7 +100,7 @@
           <legend class="fieldset-legend">Code</legend>
           <input name="totp_token" type="text" class="input" placeholder="Enter code" />
         </fieldset>
-        <div class="card-actions">
+        <div class="card-actions mt-4">
           <button class="btn btn-neutral">Enable</button>
         </div>
       </form>
