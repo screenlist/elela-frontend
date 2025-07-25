@@ -8,6 +8,9 @@
   let { data } = $props()
   
   let bridge = $state(null)
+  let date = $state(new Date(Date.now() + 1000*60*5))
+  let date_string = $derived(date.toISOString().split('T')[0])
+  let time_string = $derived(`${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`)
 
   function copyFlare(){
     navigator.clipboard.writeText(bridge.public_code)
@@ -49,9 +52,9 @@
           <div class="divider"></div>
           <p class="fieldset-legend">Schedule</p>
           <label for="date" class="label">Date</label>
-          <input id="date" name="date" type="date" class="input w-full" />
+          <input id="date" name="date" bind:value={date_string} type="date" class="input w-full" />
           <label for="time" class="label">Time</label>
-          <input id="time" name="time" type="time" class="input w-full" />
+          <input id="time" name="time" bind:value={time_string} type="time" class="input w-full" />
         </fieldset>
         <div class="card-actions justify-end">
           <button type="submit" class="btn btn-neutral uppercase w-1/2">Create</button>
