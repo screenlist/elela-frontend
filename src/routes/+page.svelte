@@ -163,7 +163,7 @@
         {:else}
           <fieldset class="fieldset">
             <label for="passphrase" class="fieldset-legend">Passphrase</label>
-            <input id="passphrase" bind:value={passphrase} name="passphrase" type="text" class="input w-full" placeholder="all you need is six words" />
+            <input id="passphrase" autocomplete="off" bind:value={passphrase} name="passphrase" type="text" class="input w-full" placeholder="all you need is six words" />
           </fieldset>
         {/if}
         <div class="card-actions mt-4 flex-col">
