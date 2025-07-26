@@ -20,7 +20,7 @@
   onDestroy(() => { cleanupToasts() })
 </script>
 
-<div class="flex flex-col justify-items-start items-center p-4">
+<div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-md w-full min-w-xs">
     {#if connect ===  false}
       <section class="card-body">

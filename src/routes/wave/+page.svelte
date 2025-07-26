@@ -27,11 +27,10 @@
   onDestroy(() => {cleanupToasts()})
 </script>
 
-<div class="flex flex-col justify-items-start items-center p-4">
+<div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
     <form class="card-body" method="POST" action="?/wave" use:enhance={({formData}) => {
       return async ({result, update}) => {
-        console.log(result)
         if(result.data?.posterror){ 
           addToast({ message: result.data.posterror, type: 'error', auto: true }) 
         }
@@ -90,7 +89,7 @@
           </div>
           <div class="divider"></div>
           <label for="passphrase" class="fieldset-legend">Anchor</label>
-          <p class="label">A private passphrase you will need to join a bridge chat</p>
+          <span class="label text-wrap">A private passphrase you will need to join a bridge chat</span>
           <input id="passphrase" name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
           <div role="alert" class="alert alert-soft alert-info">
             <Info />

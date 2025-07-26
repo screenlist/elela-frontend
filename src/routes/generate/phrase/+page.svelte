@@ -74,15 +74,19 @@
   })
 </script>
 
-<div class="flex flex-col justify-items-start items-center p-4">
-  <section class="card card-border bg-base-200  max-w-xl w-full min-w-xs">
+<div class="flex flex-col justify-items-start items-center">
+  <section class="card card-border bg-base-300  max-w-sm w-full">
     <div class="card-body items-center text-center">
-      <h1 class="card-title uppercase">Canal <span class="badge badge-neutral">{data.letter_sequence}</span></h1>
+      <h1 class="card-title uppercase">Canal</h1>
       <div role="alert" class="alert alert-warning w-full">
-        <Info />
-        <span>Do not refresh this page. These details will only be displayed once, click save. This information cannot be reset, never lose it.</span>
+        <span>Do not refresh this page. These details will only be displayed once, they cannot be reset, click save & never lose them.</span>
       </div>
-      <span class="font-mono w-full m-4 p-6 bg-base-300 font-semibold text-base border-dashed border-1 rounded-lg border-neutral">
+      <h2 class="font-bold mt-4 w-full text-left">Sequence</h2>
+      <span class="font-mono w-full p-2 bg-base-200 font-semibold text-base border-dashed border-1 rounded-lg border-neutral">
+        {data.letter_sequence}
+      </span>
+      <h2 class="font-bold mt-4 w-full text-left">Passphrase</h2>
+      <span class="font-mono w-full p-6 bg-base-200 font-semibold text-base border-dashed border-1 rounded-lg border-neutral">
         {#if loading || !passphrase}
           <div class="flex justify-center items-center w-full">
             <span class="loading loading-spinner text-neutral"></span>
@@ -92,7 +96,7 @@
         {/if}
       </span>
       <div class="card-actions justify-evenly w-full">
-        <button disable={!loading || passphrase ? false : true} onclick={saveCanal} class="btn btn-accent mt-4 flex-1">Save</button>
+        <button disable={!loading || passphrase ? false : true} onclick={saveCanal} class="btn btn-primary mt-4 flex-1">Save</button>
         <a href="/" class="btn btn-outline mt-4 flex-1">Enter</a>
       </div>
     </div>

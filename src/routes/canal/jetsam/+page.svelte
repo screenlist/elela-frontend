@@ -343,7 +343,7 @@
   onDestroy(() => {cleanupToasts()})
 </script>
 
-<div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
+<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
   <div class="card card-border card-sm bg-base-300 w-full sm:w-1/2 md:w-2/5 lg:w-1/3 xl:w-1/4">
     <section class="card-body justify-between">
       <h2 class="card-title">{uploading ? 'Uploading' : 'Upload'}</h2>

@@ -27,7 +27,7 @@
   onDestroy(() => { cleanupToasts() })
 </script>
 
-<div class="flex flex-col justify-items-start items-center p-4">
+<div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
     {#if data?.bridge}
       <section class="card-body">
@@ -177,12 +177,12 @@
           <span>This feature can also be used to check if your reply has been accepted</span>
         </div>
         <fieldset class="fieldset">
-            <label for="flare" class="label">Flare</label>
-            <input name="flare" autocomplete="off" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
-            <label for="counterflare" class="label">Response Flare</label>
-            <input name="counterflare" autocomplete="off" type="text" class="input w-full" placeholder="😮👨🏽 calmly breathe 🧘🏽‍♀️" />
-            <label for="passphrase" class="label">Anchor</label>
-            <input name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
+          <label for="flare" class="label">Flare</label>
+          <input name="flare" autocomplete="off" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
+          <label for="counterflare" class="label">Response Flare</label>
+          <input name="counterflare" autocomplete="off" type="text" class="input w-full" placeholder="😮👨🏽 calmly breathe 🧘🏽‍♀️" />
+          <label for="passphrase" class="label">Anchor</label>
+          <input name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
         </fieldset>
         <div class="card-actions flex-col">
           <button class="btn btn-primary mt-4 w-full">Join</button>

@@ -105,7 +105,7 @@
   </header>
 {/if} -->
 
-<main class={`flex-grow pt-4 pb-4 h-full overflow-y-auto scrollbar-hide ${page.url.pathname.startsWith('/bridge/') ? 'pl-4 pr-4 mb-0' : 'mb-14'}`}>
+<main class={`flex-grow pt-4 pb-4 h-full overflow-y-auto pl-4 pr-4 scrollbar-hide ${page.url.pathname.startsWith('/bridge/') ? ' mb-0' : 'mb-14'}`}>
   {#if mounted && browser}
     {@render children()}
   {:else}

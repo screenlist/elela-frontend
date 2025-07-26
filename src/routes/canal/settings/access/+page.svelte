@@ -25,7 +25,7 @@
   // $inspect(data, form).with(console.log)
 </script>
 
-<section class="card bg-base-200 min-h-[70vh] w-full">
+<section class="card bg-base-300 min-h-[70vh] w-full">
   <div class="card-body">
     <h2 class="card-title">Secure Access</h2>
     <span class="opacity-50">Manage multi-factor authentication to secure your canal</span>

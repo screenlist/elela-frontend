@@ -17,10 +17,10 @@
 
 </script>
 
-{#if !routesWithNoNav.some(route => route === path)}
+<!-- {#if !routesWithNoNav.some(route => route === path)}
   <div class="flex justify-between items-center pl-4 sm:pl-12 sm:pr-8">
     <h1 class="text-xl sm:text-2xl font-semibold">{title}</h1>
   </div>
-{/if}
+{/if} -->
 
 {@render children()}
