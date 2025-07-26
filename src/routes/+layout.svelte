@@ -13,7 +13,7 @@
   import { session } from '$lib/expiry.svelte'
   import { cleanupToasts } from '$lib/toasts.js'
   import { getCookie } from '$lib/cookie'
-  import { FolderClosed, Settings, MessageCircle, Home } from '@lucide/svelte';
+  import { FolderClosed, Settings, MessageCircle, Home } from '@lucide/svelte'
 
   let { children, data } = $props()
 
@@ -129,29 +129,29 @@
   </dialog>
 </div>
 {#if !page.url.pathname.startsWith('/bridge/')}
-  <div class="dock dock-sm bg-primary text-primary-content sm:pl-[10%] sm:pr-[10%] lg:pl-[25%] lg:pr-[25%]">
+  <div class="dock dock-sm bg-base-300 text-primary sm:pl-[10%] sm:pr-[10%] lg:pl-[25%] lg:pr-[25%]">
     <button onclick={() => goto('/')} class={`${path === '/' ? 'dock-active' : ''}`}>
-      <img src="/icon-dark.svg" alt="Icon" class="w-[2.4rem]">
+      <img src="/icon-light.svg" alt="Icon" class="w-[2.4rem]">
     </button>
 
     {#if active_session}
       <button onclick={() => goto('/canal')} class={`${path === '/canal' ? 'dock-active' : ''}`}>
-        <Home size={25} fill="#0A0A0A" />
+        <Home size={25} fill="#A7F3D0" />
         <span class="dock-label">Canal</span>
       </button>
 
       <button onclick={() => goto('/canal/bridges')} class={`${/.*\/bridges\/?.*/.test(path) ? 'dock-active' : ''}`}>
-        <MessageCircle size={25} fill="#0A0A0A" />
+        <MessageCircle size={25} fill="#A7F3D0" />
         <span class="dock-label">Bridge</span>
       </button>
 
       <button onclick={() => goto('/canal/jetsam')} class={`${/.*\/jetsam\/?.*/.test(path) ? 'dock-active' : ''}`}>
-        <FolderClosed size={25} fill="#0A0A0A" />
+        <FolderClosed size={25} fill="#A7F3D0" />
         <span class="dock-label">Cargo</span>
       </button>
 
       <button onclick={() => goto('/canal/settings')} class={`${/.*\/settings\/?.*/.test(path) ? 'dock-active' : ''}`}>
-        <Settings size={25} fill="#0A0A0A" />
+        <Settings size={25} fill="#A7F3D0" />
         <span class="dock-label">Settings</span>
       </button>
     {/if}
