@@ -166,8 +166,8 @@
       uploading = false
       input_file = null
       total_costs = 0
-      downloads = 0
-      retention = 0
+      downloads = 3
+      retention = 1
       await invalidate('get:jetsam')
     } else {
 
@@ -277,8 +277,8 @@
       uploading = false
       input_file = null
       total_costs = 0
-      downloads = 0
-      retention = 0
+      downloads = 3
+      retention = 1
       await invalidate('get:jetsam')
     }
   }
@@ -396,8 +396,8 @@
           <label for="flare" class="fieldset-legend">Downloads</label>
           <input disabled={!input_file || input_file.length === 0} id="drops" name="quantity" type="range" min="3" max="100" bind:value={downloads} class="range w-full" />
           <div class="flex">
-            <button onclick={() => downloads - 100 >= 3 ? downloads -= 100 : downloads = downloads} type="button" class="btn btn-ghost uppercase flex-1">- 100</button>
-            <button onclick={() => downloads += 100} type="button" class="btn btn-ghost uppercase flex-1">+ 100</button>
+            <button onclick={() => downloads - 100 >= 3 ? downloads -= 100 : downloads = downloads} type="button" class="btn btn-sm btn-ghost uppercase flex-1">- 100</button>
+            <button onclick={() => downloads += 100} type="button" class="btn btn-sm btn-ghost uppercase flex-1">+ 100</button>
           </div>
           <span class="label">{downloads} downloads</span>
         </fieldset>

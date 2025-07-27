@@ -13,6 +13,7 @@
   let queried = $state(false)
   let bridge = $state(null)
   let session = $state(null)
+  let loading = $state(false)
 
   const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full' });
   const timeFormatter = new Intl.DateTimeFormat('en-ZA', { timeStyle: 'short' });
@@ -73,6 +74,7 @@
         {/if}
         {#if data.bridge.approved}
           <form method="POST" action="?/logout" class="card-actions" use:enhance={({formData}) => {
+            loading = true
             return async ({result, update}) => {
               if(result.data?.posterror){ 
                 addToast({ message: result.data.posterror, type: 'error', auto: true }) 
@@ -82,6 +84,7 @@
                 bridge = null
               }
               await update()
+              loading = false
             }
           }}>
             <button type="submit" class="btn btn-outline">Logout</button>
@@ -135,6 +138,7 @@
         {/if}
         {#if bridge.approved}
           <form method="POST" action="?/logout" class="card-actions" use:enhance={({formData}) => {
+            loading = true
             return async ({result, update}) => {
               if(result.data?.posterror){ 
                 addToast({ message: result.data.posterror, type: 'error', auto: true }) 
@@ -144,6 +148,7 @@
                 bridge = null
               }
               await update()
+              loading = false
             }
           }}>
             <button type="submit" class="btn btn-outline">Logout</button>
@@ -155,8 +160,8 @@
       </section>
     {:else}
       <form method="POST" action="?/auth" class="card-body" use:enhance={({formData}) => {
+        loading = true
         return async ({result, update}) => {
-          console.log(result)
           if(result.data?.posterror){ 
             addToast({ message: result.data.posterror, type: 'error', auto: true }) 
           }
@@ -165,6 +170,7 @@
             bridge = result.data?.bridge
           }
           await update()
+          loading = false
         }
       }} >
         <h1 class="card-title">Bridge Chat</h1>
@@ -198,3 +204,10 @@
     </div>
   {/each}
 </div>
+{#if loading}
+  <div class="toast toast-top toast-center">
+    <div class={`btn btn-primary btn-circle`}>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </div>
+{/if}

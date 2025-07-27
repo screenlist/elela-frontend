@@ -8,6 +8,7 @@
   let { data } = $props()
   
   let bridge = $state(null)
+  let loading = $state(false)
   let date = $state(new Date(Date.now() + 1000*60*5))
   let date_string = $derived(date.toISOString().split('T')[0])
   let time_string = $derived(`${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`)
@@ -23,13 +24,14 @@
 <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
   <div class="card card-border card-sm bg-base-300 w-full sm:w-1/2 md:w-2/5 lg:w-1/3 xl:w-1/4">
     <form id="new" class="card-body justify-between" method="POST" action="?/bridge" use:enhance={({formData}) => {
+      loading = true
       return async ({result, update}) => {
-        console.log(result)
         if(result.data?.posterror){ 
           addToast({ message: result.data.posterror, type: 'error', auto: true }) 
         }
         bridge = result.data?.new_bridge
         await update()
+        loading = false
       }
     }}>
       {#if bridge}

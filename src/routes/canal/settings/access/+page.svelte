@@ -5,11 +5,14 @@
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
   import { onDestroy } from 'svelte'
+
   let { data, form } = $props()
+
   let setup = $state(false)
   let token = $state(null)
   let secret =$state(null)
   let uri = $state(null)
+  let loading = $state(false)
 
   let qrUrl = $state('')
 
@@ -22,7 +25,6 @@
   })
   
   onDestroy(() => { cleanupToasts() })
-  // $inspect(data, form).with(console.log)
 </script>
 
 <section class="card bg-base-300 min-h-[calc(100vh-19.829rem)] sm:min-h-[calc(100vh-8.829rem)] w-full">
@@ -31,12 +33,14 @@
     <span class="opacity-50">Manage multi-factor authentication to secure your canal</span>
     {#if data.canal.usage.totp_enabled && !setup}
       <form method="POST" action="?/disable" use:enhance={({formData}) => {
+        loading = true
         if(token){ formData.append('auth_token', token) }
         return async ({result, update}) => {
           if(result.data?.autherror){ 
             addToast({ message: result.data.autherror, type: 'error', auto: true }) 
           }
           await update()
+          loading = false
         }
       }}>
         <p class="alert alert-soft alert-success mb-4"><Info/>Your secure access is enabled, you need to use your authenticator app to enter the canal.</p>
@@ -50,8 +54,8 @@
       </form>
     {:else if !data.canal.usage.totp_enabled && !setup}
       <form method="POST" action="?/setup" use:enhance={() => {
+        loading = true
         return async ({result, update}) => {
-          console.log(result)
           if(result.data?.autherror){ 
             addToast({ message: result.data.autherror, type: 'error', auto: true }) 
           } else {
@@ -61,6 +65,7 @@
             setup = true
           }
           await update()
+          loading = false
         }
       }}>
         {#if !data.canal.usage.is_premium }
@@ -78,6 +83,7 @@
     {/if}
     {#if !data.canal.usage.topt_enabled && setup}
       <form method="POST" action="?/enable" use:enhance={({formData}) => {
+        loading = true
         if(token){ formData.append('auth_token', token) }
         return async ({result, update}) => {
           if(result.data?.autherror){ 
@@ -89,6 +95,7 @@
             setup = false
           }
           await update()
+          loading = false
         }
       }}>
         {#if qrUrl}
@@ -114,3 +121,10 @@
     </div>
   {/each}
 </div>
+{#if loading}
+  <div class="toast toast-top toast-center">
+    <div class={`btn btn-primary btn-circle`}>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </div>
+{/if}

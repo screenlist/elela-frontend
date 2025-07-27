@@ -8,6 +8,7 @@
 
   let { data } = $props()
   let connect = $state(false) 
+  let loading = $state(false)
 
   function copyFlare(){
     navigator.clipboard.writeText(data.bridge.flare)
@@ -82,6 +83,7 @@
       </section>
     {:else}
       <form class="card-body" action="?/connect" method="POST" use:enhance={({formData}) => {
+        loading = true
         return async ({result, update}) => {
           if(result.data?.posterror){ 
             addToast({ message: result.data.posterror, type: 'error', auto: true }) 
@@ -90,6 +92,7 @@
             connect = false
           }
           await update()
+          loading = false
         }
       }}>
         <h1 class="card-title">Connect</h1>
@@ -115,3 +118,10 @@
     </div>
   {/each}
 </div>
+{#if loading}
+  <div class="toast toast-top toast-center">
+    <div class={`btn btn-primary btn-circle`}>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </div>
+{/if}

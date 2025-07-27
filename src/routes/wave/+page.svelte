@@ -7,6 +7,7 @@
   import { addToCalendar } from '$lib/event'
 
   let wave = $state(null)
+  let loading = $state(false)
 
   function copyFlare(){
     navigator.clipboard.writeText(wave.counterflare)
@@ -30,11 +31,13 @@
 <div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
     <form class="card-body" method="POST" action="?/wave" use:enhance={({formData}) => {
+      loading = true
       return async ({result, update}) => {
         if(result.data?.posterror){ 
           addToast({ message: result.data.posterror, type: 'error', auto: true }) 
         }
         wave = result.data?.wave
+        loading = false
         await update()
       }
     }}>
@@ -110,3 +113,10 @@
     </div>
   {/each}
 </div>
+{#if loading}
+  <div class="toast toast-top toast-center">
+    <div class={`btn btn-primary btn-circle`}>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </div>
+{/if}
