@@ -25,8 +25,8 @@
   // $inspect(data, form).with(console.log)
 </script>
 
-<section class="card bg-base-300 min-h-[70vh] w-full">
-  <div class="card-body">
+<section class="card bg-base-300 min-h-[calc(100vh-19.829rem)] sm:min-h-[calc(100vh-8.829rem)] w-full">
+  <div class="card-body max-w-lg">
     <h2 class="card-title">Secure Access</h2>
     <span class="opacity-50">Manage multi-factor authentication to secure your canal</span>
     {#if data.canal.usage.totp_enabled && !setup}

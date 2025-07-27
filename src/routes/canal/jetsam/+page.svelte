@@ -407,8 +407,8 @@
       {/if}
     </section>
   </div>
-  <div class="flex flex-col gap-4 w-full sm:flex-1 xl:flex-row">
-    <section id="active" class="card card-sm card-border h-[calc(100vh-2rem)] sm:h-[calc(100vh-18.75rem)] xl:h-[calc(100vh-12rem)]  bg-base-300 xl:flex-1">
+  <div class="flex flex-col w-full sm:flex-1 xl:flex-row">
+    <section id="active" class="card card-sm card-border h-[calc(100vh-8.829rem)] bg-base-300 xl:flex-1">
       <div class="card-body h-full">
         <h3 class="card-title">Files</h3>
         {#if data.active.length < 1}

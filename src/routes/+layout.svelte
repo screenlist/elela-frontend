@@ -13,7 +13,7 @@
   import { session } from '$lib/expiry.svelte'
   import { cleanupToasts } from '$lib/toasts.js'
   import { getCookie } from '$lib/cookie'
-  import { FolderClosed, Settings, MessageCircle, Home } from '@lucide/svelte'
+  import { FolderClosed, Settings, MessageCircle, Home, ArrowLeft } from '@lucide/svelte'
 
   let { children, data } = $props()
 
@@ -89,23 +89,22 @@
   if(browser){ active_session = getCookie('canal_session') }
 </script>
 
-<!-- {#if !page.url.pathname.startsWith('/bridge/')}
-  <header class="pb-2 pt-2">
-    <nav class="navbar bg-base-100 shadow-sm">
-      <div class="navbar-start">
-      </div>
-      <div class="navbar-center">
-        <a class="btn btn-circle text-xl" href="/">
-          <img src="/icon-dark.svg" alt="Elela icon" height="100px" width="100px" />
-        </a>
-      </div>
-      <div class="navbar-end">
-      </div>
+{#if !page.url.pathname.startsWith('/bridge/')}
+  <header class="w-full mt-4 mb-4">
+    <nav class="bg-base-100 pl-4 pr-4 flex items-center justify-center shadow-sm">
+      {#if page.url.pathname !== '/'}
+        <button onclick={() => history.back()} class="btn btn-circle btn-primary btn-sm">
+          <ArrowLeft />
+        </button>
+      {/if}
+      <a class="text-xl flex-1 flex items-center justify-center" href="/">
+        <img src="/elela-name-light.svg" alt="name logo" class="w-[6.25rem]">
+      </a>
     </nav>
   </header>
-{/if} -->
+{/if}
 
-<main class={`flex-grow pt-4 pb-4 h-full overflow-y-auto pl-4 pr-4 scrollbar-hide ${page.url.pathname.startsWith('/bridge/') ? ' mb-0' : 'mb-14'}`}>
+<main class={`flex-grow pb-4 h-full overflow-y-auto pl-4 pr-4 scrollbar-hide ${page.url.pathname.startsWith('/bridge/') ? 'pt-4 mb-0' : 'mb-14'}`}>
   {#if mounted && browser}
     {@render children()}
   {:else}

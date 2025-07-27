@@ -62,7 +62,7 @@
       {/if}
     </form>
   </div>
-  <div class="flex flex-col gap-4 w-full sm:flex-1 xl:flex-row">
+  <div class="flex flex-col gap-4 w-full min-h-[calc(100vh-8.829rem)] sm:flex-1 xl:flex-row">
     <section id="active" class="card card-sm card-border bg-base-300 xl:flex-1">
       <div class="card-body">
         <h3 class="card-title">Active</h3>
