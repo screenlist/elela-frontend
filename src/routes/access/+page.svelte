@@ -16,7 +16,7 @@
       {/if}
       <fieldset class="fieldset">
         <label for="totp_token" class="label">Code</label>
-        <input id="totp_token" name="totp_token" type="text" class="input w-full" placeholder="Enter code" />
+        <input id="totp_token" autocomplete="off" name="totp_token" type="text" class="input w-full" placeholder="Enter code" />
       </fieldset>
       <div class="card-actions flex-col">
         <button type="submit" class="btn btn-primary mt-4 w-full">Verify</button>

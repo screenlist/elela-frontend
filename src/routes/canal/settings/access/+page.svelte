@@ -46,7 +46,7 @@
         <p class="alert alert-soft alert-success mb-4"><Info/>Your secure access is enabled, you need to use your authenticator app to enter the canal.</p>
         <fieldset class="fieldset">
           <legend class="fieldset-legend">Code</legend>
-          <input name="totp_token" type="text" class="input" placeholder="Enter code" />
+          <input name="totp_token" autocomplete="off" type="text" class="input" placeholder="Enter code" />
         </fieldset>
         <div class="card-actions">
           <button class="btn btn-neutral">Disable</button>
@@ -74,7 +74,7 @@
             <span>This feature is for premium canals, <a class="link" href="/generate/buy">get yours</a>.</span>
           </div>
         {:else}
-          <p class="alert alert-soft alert-info mb-4"><Info/>After initiating the setup do not refresh the page until you have enabled secure access, otherwise you will need to wait at least 3 minutes before you can restart.</p>
+          <p class="alert alert-soft alert-info mb-4">After initiating the setup do not refresh the page until you have enabled secure access.</p>
         {/if}
         <div class="card-actions mt-4">
           <button class="btn btn-neutral">Setup</button>
