@@ -1,5 +1,5 @@
 <script>
-  import { CirclePlus, Download, Eye, Info, MessageCircle, Phone, Trash2, CircleX } from "@lucide/svelte";
+  import { CirclePlus, Download, Eye, Info, MessageCircle, Phone, Trash2, CircleX, ChevronLeft, ChevronRight } from "@lucide/svelte";
   import { enhance } from '$app/forms'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
@@ -8,7 +8,7 @@
   import Icon from "$lib/Icon.svelte"
   import extend_session from "$lib/extend_session"
   import { sha1 } from "hash-wasm"
-  import { invalidate } from "$app/navigation"
+  import { goto, invalidate } from "$app/navigation"
   import { page } from "$app/state"
   import size from "$lib/size"
 
@@ -334,7 +334,7 @@
   $effect(() => {
     if(data.active){
       if(cargo_info.id.length > 0){
-        const new_cargo = data.active.find(val => val.id === cargo_info.id)
+        const new_cargo = data.active.results.find(val => val.id === cargo_info.id)
         cargo_info.downloads_left = new_cargo.downloads_total - new_cargo.downloads_count
       }
     }
@@ -410,15 +410,25 @@
   <div class="flex flex-col w-full sm:flex-1 xl:flex-row">
     <section id="active" class="card card-sm card-border h-[calc(100vh-8.829rem)] bg-base-300 xl:flex-1">
       <div class="card-body h-full">
-        <h3 class="card-title">Files</h3>
-        {#if data.active.length < 1}
+        <div class="flex w-full flex-row justify-between items-center">
+          <h3 class="card-title">Files</h3>
+          <div class="flex flex-row gap-2">
+            <button onclick={() => goto(`/canal/jetsam?page=${data.active.navigation[0]}&limit=10`)} class={`btn btn-outline btn-neutral btn-circle btn-sm ${data.active.has_previous_page? '' : 'btn-disabled'}`}>
+              <ChevronLeft />
+            </button>
+            <button onclick={() => goto(`/canal/jetsam?page=${data.active.navigation[1]}&limit=10`)} class={`btn btn-outline btn-neutral btn-circle btn-sm ${data.active.has_next_page? '' : 'btn-disabled'}`}>
+              <ChevronRight />
+            </button>
+          </div>
+        </div>
+        {#if data.active.results.length < 1}
           <figure class="w-full flex-1 items-center justify-center">
             <img class="sm:max-w-sm" src="/friends.svg" alt="An illustration a person sitting in a garden with their pet" />
           </figure>
         {:else}
           <div class="h-full overflow-y-auto w-full">
             <ul class="list bg-base-100 rounded-box shadow-md">
-              {#each data.active as cargo}
+              {#each data.active.results as cargo}
                 <li class="list-row">
                   <div>
                     <Icon typeInput={cargo.content_type} />
