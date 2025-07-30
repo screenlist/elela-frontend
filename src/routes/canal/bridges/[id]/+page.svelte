@@ -74,7 +74,6 @@
           </ul>
         {/if}
         <div class="card-actions">
-          <a href="/canal/bridges" class="btn btn-outline flex-1">Back</a>
           <button onclick={copyFlare} type="button" class="btn btn-accent flex-1">Share</button>
           {#if data.bridge.connections < 1}
             <button onclick={() => { connect = true }} type="button" class="btn btn-primary flex-1">Connect</button>
@@ -105,6 +104,7 @@
           </div>
         </fieldset>
         <div class="card-actions">
+          <button type="button" onclick={() => connect = false} class="btn btn-outline">Cancel</button>
           <button type="submit" class="btn btn-accent flex-1">Approve</button>
         </div>
       </form>
