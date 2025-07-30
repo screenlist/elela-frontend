@@ -22,7 +22,10 @@
     type: '',
     size: 0,
     is_public: false,
-    id: ''
+    id: '',
+    created_at: '',
+    expires_at: '',
+    updated_at: ''
   })
   let cargo_loading = $state(false)
   
@@ -38,6 +41,8 @@
   let large_progress = $state(0)
   let uploading = $state(false)
 
+  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
+
   function resetCargoInfo(){
     cargo_info = {
       name: '',
@@ -46,7 +51,10 @@
       type: '',
       size: 0,
       is_public: false,
-      id: ''
+      id: '',
+      created_at: '',
+      expires_at: '',
+      updated_at: ''
     }
   }
 
@@ -332,10 +340,12 @@
   })
 
   $effect(() => {
-    if(data.active){
+    if(data.active.results){
       if(cargo_info.id.length > 0){
         const new_cargo = data.active.results.find(val => val.id === cargo_info.id)
-        cargo_info.downloads_left = new_cargo.downloads_total - new_cargo.downloads_count
+        if(new_cargo){
+          cargo_info.downloads_left = new_cargo.downloads_total - new_cargo.downloads_count
+        }
       }
     }
   })
@@ -396,8 +406,8 @@
           <label for="flare" class="fieldset-legend">Downloads</label>
           <input disabled={!input_file || input_file.length === 0} id="drops" name="quantity" type="range" min="3" max="100" bind:value={downloads} class="range w-full" />
           <div class="flex">
-            <button onclick={() => downloads - 100 >= 3 ? downloads -= 100 : downloads = downloads} type="button" class="btn btn-sm btn-ghost uppercase flex-1">- 100</button>
-            <button onclick={() => downloads += 100} type="button" class="btn btn-sm btn-ghost uppercase flex-1">+ 100</button>
+            <button disabled={!input_file || input_file.length === 0} onclick={() => downloads - 100 >= 3 ? downloads -= 100 : downloads = downloads} type="button" class="btn btn-sm btn-ghost uppercase flex-1">- 100</button>
+            <button disabled={!input_file || input_file.length === 0} onclick={() => downloads += 100} type="button" class="btn btn-sm btn-ghost uppercase flex-1">+ 100</button>
           </div>
           <span class="label">{downloads} downloads</span>
         </fieldset>
@@ -413,10 +423,10 @@
         <div class="flex w-full flex-row justify-between items-center">
           <h3 class="card-title">Files</h3>
           <div class="flex flex-row gap-2">
-            <button onclick={() => goto(`/canal/jetsam?page=${data.active.navigation[0]}&limit=10`)} class={`btn btn-outline btn-neutral btn-circle btn-sm ${data.active.has_previous_page? '' : 'btn-disabled'}`}>
+            <button disabled={!data.active.has_previous_page} onclick={() => goto(`/canal/jetsam?page=${data.active.navigation[0]}&limit=10`)} class={`btn btn-outline btn-neutral btn-circle btn-sm`}>
               <ChevronLeft />
             </button>
-            <button onclick={() => goto(`/canal/jetsam?page=${data.active.navigation[1]}&limit=10`)} class={`btn btn-outline btn-neutral btn-circle btn-sm ${data.active.has_next_page? '' : 'btn-disabled'}`}>
+            <button disabled={!data.active.has_next_page} onclick={() => goto(`/canal/jetsam?page=${data.active.navigation[1]}&limit=10`)} class={`btn btn-outline btn-neutral btn-circle btn-sm`}>
               <ChevronRight />
             </button>
           </div>
@@ -435,7 +445,7 @@
                   </div>
                   <div>
                     <div>{cargo.name}</div>
-                    <div class="text-xs uppercase font-semibold opacity-60">{size(cargo.size)}, {Math.floor( ( ( new Date(cargo.storage_valid_until).valueOf() - Date.now() ) / (1000 * 60 * 60 * 24)) )} days</div>
+                    <div class="text-xs uppercase font-semibold opacity-60">{size(cargo.size)}, {Math.floor( ( ( new Date(cargo.storage_valid_until).valueOf() - Date.now() ) / (1000 * 60 * 60 * 24)) )} days left</div>
                   </div>
                   <button onclick={() => {
                     cargo_info = {
@@ -445,7 +455,10 @@
                       downloads_left: cargo.downloads_total - cargo.downloads_count,
                       size: cargo.size,
                       drops: ( cargo.subpoints / 100 ).toFixed(2),
-                      id: cargo.id
+                      id: cargo.id,
+                      created_at: dateFormatter.format(new Date(cargo.created_at)),
+                      updated_at: dateFormatter.format(new Date(cargo.updated_at)),
+                      expires_at: dateFormatter.format(new Date(cargo.storage_valid_until))
                     }
                     openCargoModal()
                   }} class="btn btn-square btn-neutral">
@@ -455,13 +468,14 @@
               {/each}
             </ul>
           </div>
+          <span class="w-full text-center font-bold font-mono">Page {data.active.page_info}</span>
         {/if}
       </div>
     </section>
   </div>
 </div>
 <dialog bind:this={cargo_info_modal} class="modal modal-bottom sm:modal-middle">
-  <div class="modal-box bg-neutral text-base-100">
+  <div class="modal-box bg-accent text-neutral">
     <form method="dialog">
       <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-4.5">
         <CircleX />
@@ -469,8 +483,8 @@
     </form>
     <h3 class="text-lg font-bold uppercase">{cargo_info.type}</h3>
     {#if cargo_loading }
-      <div class="flex justify-center items-center h-50 sm:h-44 w-full">
-        <span class="loading loading-spinner text-base-100"></span>
+      <div class="flex justify-center items-center h-77 sm:h-71 w-full">
+        <span class="loading loading-spinner text-neutral"></span>
       </div>
     {:else}
       <div class="flex flex-col gap-3 mt-2 mb-4 w-full">
@@ -492,6 +506,18 @@
         <div class="flex flex-row w-full justify-between">
           <p class="w-1/3">Cost</p>
           <span class="flex-1">{cargo_info.drops} Drops</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Expires</p>
+          <span class="flex-1">{cargo_info.expires_at}</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Modified</p>
+          <span class="flex-1">{cargo_info.updated_at}</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Created</p>
+          <span class="flex-1">{cargo_info.created_at}</span>
         </div>
       </div>
     {/if}
