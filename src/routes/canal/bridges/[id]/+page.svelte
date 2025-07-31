@@ -15,7 +15,7 @@
     addToast({ message: 'Flare successfully copied to clipboard', type: 'success', auto: true })
   }
 
-  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full' });
+  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium' });
   const timeFormatter = new Intl.DateTimeFormat('en-ZA', { timeStyle: 'short' });
 
   onDestroy(() => { cleanupToasts() })
