@@ -10,7 +10,7 @@
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { diceware } from '$lib/diceware.js'
   import { toasts } from '$lib/toasts.svelte.js'
-  import { PUBLIC_SERVER } from '$env/static/public'
+  import { PUBLIC_CLIENT, PUBLIC_SERVER } from '$env/static/public'
   import { argon2id } from 'hash-wasm'
   import { decodeHex } from '@std/encoding'
   import { computeHMAC } from '$lib/hmac.js'
@@ -101,7 +101,7 @@
 
 <div class="flex flex-col justify-items-start items-center">
   {#if !active_session}
-    <div class="card card-border card-sm bg-base-300 max-w-sm w-full min-w-xs">
+    <div class="card card-border card-sm bg-base-300 max-w-sm w-full">
       <form class="card-body" method="POST" action="?/auth" use:enhance={async ({formData, cancel}) => {
         loading = true
         if(!sequence || !salt || passphrase.length === 0){
