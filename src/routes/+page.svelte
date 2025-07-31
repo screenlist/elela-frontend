@@ -110,7 +110,7 @@
           loading = false
         } else {
           const saltBuffer = decodeHex(salt)
-          const key = await argon2id({
+          const hash = await argon2id({
             password: passphrase,
             salt: saltBuffer,
             memorySize: 64000,
@@ -119,7 +119,6 @@
             outputType: 'hex',
             parallelism: 1
           })
-          const hash = await computeHMAC(key, 'canal-passphrase')
           formData.append('passphrase_hash', hash)
           formData.append('sequence', sequence)
         }
@@ -163,7 +162,7 @@
         {:else}
           <fieldset class="fieldset">
             <label for="passphrase" class="fieldset-legend">Passphrase</label>
-            <input id="passphrase" autocomplete="off" bind:value={passphrase} name="passphrase" type="text" class="input w-full" placeholder="all you need is six words" />
+            <input id="passphrase" autocomplete="off" bind:value={passphrase} type="text" class="input w-full" placeholder="all you need is six words" />
           </fieldset>
         {/if}
         <div class="card-actions mt-4 flex-col">

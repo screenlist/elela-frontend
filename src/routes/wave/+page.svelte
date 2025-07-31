@@ -5,9 +5,13 @@
   import { toasts } from '$lib/toasts.svelte.js'
   import { onDestroy } from 'svelte'
   import { addToCalendar } from '$lib/event'
+  import { encodeHex } from '@std/encoding'
+  import { argon2id } from 'hash-wasm'
+  import { PUBLIC_SERVER } from '$env/static/public'
 
   let wave = $state(null)
   let loading = $state(false)
+  let passphrase = $state('')
 
   function copyFlare(){
     navigator.clipboard.writeText(wave.counterflare)
@@ -35,8 +39,27 @@
 
 <div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
-    <form class="card-body" method="POST" action="?/wave" use:enhance={({formData}) => {
+    <form class="card-body" method="POST" action="?/wave" use:enhance={async ({formData, cancel}) => {
       loading = true
+      if(passphrase.length < 10){
+        addToast({ message: 'The anchor must be at least 10 characters long', type: 'error', auto: true }) 
+        cancel()
+        loading = false
+      } else { 
+        const salt = crypto.getRandomValues(new Uint8Array(16))
+        const hash = await argon2id({
+          password: passphrase,
+          salt: salt,
+          memorySize: 64000,
+          iterations: 3,
+          hashLength: 32,
+          outputType: 'hex',
+          parallelism: 1
+        })
+        formData.append('passphrase_hash', hash)
+        formData.append('passphrase_salt', encodeHex(salt))
+      }
+
       return async ({result, update}) => {
         if(result.data?.posterror){ 
           addToast({ message: result.data.posterror, type: 'error', auto: true }) 
@@ -98,7 +121,7 @@
           <div class="divider"></div>
           <label for="passphrase" class="fieldset-legend">Anchor</label>
           <span class="label text-wrap">A private passphrase you will need to join a bridge chat</span>
-          <input id="passphrase" name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
+          <input autocomplete="off" id="passphrase" bind:value={passphrase} type="password" class="input w-full" placeholder="Passphrase" />
           <div role="alert" class="alert alert-soft alert-info">
             <Info />
             <span>Never share the passphrase with anyone, treat it like your password and do not forget it</span>

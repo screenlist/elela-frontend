@@ -8,7 +8,8 @@ export const actions = {
 
     const flare = values.flare
     const counterflare = values.counterflare
-    const anchor = values.passphrase
+    const anchor = values.passphrase_hash
+    const salt = values.passphrase_salt
 
     const res = await fetch(`${PUBLIC_SERVER}/canal/wave`,
       {
@@ -19,7 +20,8 @@ export const actions = {
         body: JSON.stringify({
           flare: flare,
           counterflare: counterflare,
-          anchor: anchor
+          anchor: anchor,
+          salt: salt
         })
       }
     )

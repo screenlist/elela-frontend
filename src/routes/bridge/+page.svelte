@@ -6,7 +6,10 @@
   import { Info, Calendar, Clock } from '@lucide/svelte'
   import { browser } from '$app/environment'
   import { getCookie } from '$lib/cookie'
-    import { invalidateAll } from '$app/navigation';
+  import { invalidateAll } from '$app/navigation'
+  import { argon2id } from 'hash-wasm'
+  import { decodeHex } from '@std/encoding'
+  import { PUBLIC_SERVER } from '$env/static/public'
 
   let { data } = $props()
 
@@ -15,8 +18,32 @@
   let session = $state(null)
   let loading = $state(false)
 
+  let counterflare = $state('')
+  let flare = $state('')
+  let passphrase = $state('')
+
+  let salt = $state(null)
+
   const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full' });
   const timeFormatter = new Intl.DateTimeFormat('en-ZA', { timeStyle: 'short' });
+
+  async function getSalt(){
+    loading = true
+    const res = await fetch(`${PUBLIC_SERVER}/canal/wave/salt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ counterflare, flare })
+    })
+
+    if(!res.ok){  
+      loading = false
+      addToast({ message: await res.text(), type: 'error', auto: true }) 
+    } else {
+      const wave = await res.json()
+      salt = wave.secret_salt
+      loading = false
+    }
+  }
 
   onMount(() => {
     if(data?.bridge){ 
@@ -164,8 +191,26 @@
         {/if}
       </section>
     {:else}
-      <form method="POST" action="?/auth" class="card-body" use:enhance={({formData}) => {
+      <form method="POST" action="?/auth" class="card-body" use:enhance={async ({formData}) => {
         loading = true
+        if(!salt || passphrase.length < 1){
+          addToast({ message: 'The anchor must be at least 10 characters long', type: 'error', auto: true }) 
+          cancel()
+          loading = false
+        } else { 
+          const hash = await argon2id({
+            password: passphrase,
+            salt: decodeHex(salt),
+            memorySize: 64000,
+            iterations: 3,
+            hashLength: 32,
+            outputType: 'hex',
+            parallelism: 1
+          })
+          formData.append('passphrase', hash)
+          formData.append('flare', flare)
+          formData.append('counterflare', counterflare)
+        }
         return async ({result, update}) => {
           if(result.data?.posterror){ 
             addToast({ message: result.data.posterror, type: 'error', auto: true }) 
@@ -178,7 +223,7 @@
           loading = false
         }
       }} >
-        <h1 class="card-title">Bridge Chat</h1>
+        <h1 class="card-title">Bridge meeting</h1>
         <div role="alert" class="alert alert-soft alert-warning">
           <Info />
           <span>You must have already replied to a flare with a <a href="/wave" class="link">response flare</a></span>
@@ -188,15 +233,22 @@
           <span>This feature can also be used to check if your reply has been accepted</span>
         </div>
         <fieldset class="fieldset">
-          <label for="flare" class="label">Flare</label>
-          <input name="flare" autocomplete="off" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
-          <label for="counterflare" class="label">Response Flare</label>
-          <input name="counterflare" autocomplete="off" type="text" class="input w-full" placeholder="😮👨🏽 calmly breathe 🧘🏽‍♀️" />
-          <label for="passphrase" class="label">Anchor</label>
-          <input name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
+          {#if salt}
+            <label for="passphrase" class="label">Anchor</label>
+            <input bind:value={passphrase} autocomplete="off" type="password" class="input w-full" placeholder="Passphrase" />
+          {:else}
+            <label for="flare" class="label">Flare</label>
+            <input id="flare" bind:value={flare} autocomplete="off" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
+            <label for="counterflare" class="label">Response Flare</label>
+            <input id="counterflare" bind:value={counterflare} autocomplete="off" type="text" class="input w-full" placeholder="😮👨🏽 calmly breathe 🧘🏽‍♀️" />
+          {/if}
         </fieldset>
-        <div class="card-actions flex-col">
-          <button class="btn btn-primary mt-4 w-full">Join</button>
+        <div class="card-actions justify-end">
+          {#if salt}
+            <button disabled={loading} class={`btn btn-primary mt-4 w-full`} type="submit">Join</button>
+          {:else}
+            <button onclick={getSalt} disabled={loading} class={`btn btn-primary mt-4`} type="button">Continue</button>
+          {/if}
         </div>
       </form>
     {/if}

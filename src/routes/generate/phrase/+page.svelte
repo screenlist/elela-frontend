@@ -37,7 +37,7 @@
     loading = true
     const phrase = diceware()
     const salt = decodeHex(data.passphrase_salt)
-    const key = await argon2id({
+    const hash = await argon2id({
       password: phrase,
       salt: salt,
       memorySize: 64000,
@@ -46,12 +46,12 @@
       outputType: 'hex',
       parallelism: 1
     })
-    const hmac = await computeHMAC(key, 'canal-passphrase')
+    
     const res = await fetch(`${PUBLIC_SERVER}/canal/activate`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        hash: hmac,
+        hash: hash,
         sequence: data.letter_sequence
       })
     })
