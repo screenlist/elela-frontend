@@ -344,6 +344,11 @@
   }
 </script>
 
+<svelte:head>
+  <title>Elela - Bridge Meeting</title>
+	<meta name="description" content="A private anonymous bridge meeting." />
+</svelte:head>
+
 <div class="flex flex-col justify-items-start items-center">
   <div class="card card-xs bg-base-300 max-w-sm w-full min-w-2xs h-[calc(100vh-2rem)]">
     <form class="card-body flex-col h-full" onsubmit={(event) => event.preventDefault()}>

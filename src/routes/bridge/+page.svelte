@@ -28,6 +28,11 @@
   onDestroy(() => { cleanupToasts() })
 </script>
 
+<svelte:head>
+  <title>Elela - Join a Bridge</title>
+	<meta name="description" content="Join an anonymous bridge meeting." />
+</svelte:head>
+
 <div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
     {#if data?.bridge}

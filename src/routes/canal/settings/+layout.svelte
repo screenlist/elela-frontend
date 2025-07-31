@@ -5,6 +5,12 @@
 
   const path = $derived(page.url.pathname)
 </script>
+
+<svelte:head>
+  <title>Elela - Settings</title>
+	<meta name="description" content="Tweak and maintain your Canal." />
+</svelte:head>
+
 <div class="flex flex-col justify-items-start">
   <div class="flex flex-col gap-4 sm:flex-row">
     <ul class="menu bg-base-300 rounded-box w-full sm:w-60">

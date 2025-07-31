@@ -14,6 +14,11 @@
   }
 </script>
 
+<svelte:head>
+  <title>Elela - Canal</title>
+	<meta name="description" content="Your private home on the internet." />
+</svelte:head>
+
 <div class="grid auto-rows-auto grid-cols-1 gap-4 overflow-y-auto h-[calc(100vh-8.829rem)] scrollbar-hide sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
   <div class="card card-border card-sm bg-base-300 w-full h-full">
     <section class="card-body justify-between">

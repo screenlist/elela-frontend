@@ -20,6 +20,11 @@
 
   onDestroy(() => {cleanupToasts()})
 </script>
+
+<svelte:head>
+  <title>Elela - Bridges</title>
+	<meta name="description" content="Anonymous scheduled Bridge meetings." />
+</svelte:head>
   
 <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
   <div class="card card-border card-sm bg-base-300 w-full sm:w-1/2 md:w-2/5 lg:w-1/3 xl:w-1/4">

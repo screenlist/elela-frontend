@@ -47,6 +47,11 @@
 
 </script>
 
+<svelte:head>
+  <title>Elela - Premium Canal</title>
+	<meta name="description" content="Buy a New Premium Canal." />
+</svelte:head>
+
 <div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-lg w-full">
     <div class="card-body">

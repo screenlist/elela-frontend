@@ -28,6 +28,11 @@
   onDestroy(() => {cleanupToasts()})
 </script>
 
+<svelte:head>
+  <title>Elela - Response Flare</title>
+	<meta name="description" content="Request to join a scheduled bridge meeting." />
+</svelte:head>
+
 <div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
     <form class="card-body" method="POST" action="?/wave" use:enhance={({formData}) => {
