@@ -204,8 +204,8 @@
     <div class="card-body">
       <h2 class="card-title uppercase">Cargo</h2>
       <fieldset class="fieldset">
-        <label for="passphrase" class="label">Driftkey</label>
-        <input name="phrase" type="password" class="input w-full" placeholder="💦 for your eyes only 😁👀" />
+        <label for="phrase" class="label">Driftkey</label>
+        <input id="phrase" name="phrase" type="password" class="input w-full" placeholder="💦 for your eyes only 😁👀" />
         <div role="alert" class="alert alert-soft alert-info">
           <Info />
           <span>The driftkey is an emoji-words phrase used to access files made public</span>
