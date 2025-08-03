@@ -10,6 +10,7 @@
   import { argon2id } from 'hash-wasm'
   import { decodeHex } from '@std/encoding'
   import { PUBLIC_SERVER } from '$env/static/public'
+  import database from '$lib/surrealdb'
 
   let { data } = $props()
 
@@ -207,17 +208,30 @@
             outputType: 'hex',
             parallelism: 1
           })
+
+          const db = await database()
+          db.upsert(new RecordId('crypto', 'wave'), {key: hash}).catch(err => {
+            addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
+            cancel()
+            loading = false
+          })
+
           formData.append('passphrase', hash)
           formData.append('flare', flare)
           formData.append('counterflare', counterflare)
         }
         return async ({result, update}) => {
           if(result.data?.posterror){ 
+            const db = await database()
+            await db.delete(new RecordId('crypto', 'wave'))
             addToast({ message: result.data.posterror, type: 'error', auto: true }) 
           }
           if(result.data?.bridge){
             queried = true
             bridge = result.data?.bridge
+          } else {
+            const db = await database()
+            await db.delete(new RecordId('crypto', 'wave'))
           }
           await update()
           loading = false

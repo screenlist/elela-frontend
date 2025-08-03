@@ -6,7 +6,10 @@ const db = new Surreal({
 })
 
 export default async function database(){
-  await db.connect('indxdb://keys').catch(err => {
+  await db.connect('indxdb://keys', {
+    namespace: 'elela',
+    database: 'keys'
+  }).catch(err => {
     console.log(`Client database error: ${err.message}`)
   })
   return db

@@ -12,9 +12,12 @@
   import { toasts } from '$lib/toasts.svelte.js'
   import { PUBLIC_CLIENT, PUBLIC_SERVER } from '$env/static/public'
   import { argon2id } from 'hash-wasm'
-  import { decodeHex } from '@std/encoding'
+  import { decodeHex, encodeHex } from '@std/encoding'
   import { computeHMAC } from '$lib/hmac.js'
   import { onDestroy } from "svelte"
+  import database from "$lib/surrealdb"
+  import { RecordId } from "surrealdb";
+    import { deriveKey } from "$lib/encryption.js";
 
   let { data, form } = $props()
   let active_session = $state(null)
@@ -119,14 +122,25 @@
             outputType: 'hex',
             parallelism: 1
           })
+
+          const db = await database()
+          db.upsert(new RecordId('crypto', 'canal'), {key: hash}).catch(err => {
+            addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
+            cancel()
+            loading = false
+          })
+
           formData.append('passphrase_hash', hash)
           formData.append('sequence', sequence)
         }
         
         return async ({result, update}) => {
           if(result.data?.autherror){ 
+            const db = await database()
+            await db.delete(new RecordId('crypto', 'canal'))
             addToast({ message: result.data.autherror, type: 'error', auto: true }) 
           }
+
           await update()
           loading = false
         }

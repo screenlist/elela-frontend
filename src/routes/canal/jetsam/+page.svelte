@@ -1,5 +1,5 @@
 <script>
-  import { CirclePlus, Download, Eye, Info, MessageCircle, Phone, Trash2, CircleX, ChevronLeft, ChevronRight } from "@lucide/svelte";
+  import { CirclePlus, Download, Eye, Info, MessageCircle, Phone, Trash2, CircleX, ChevronLeft, ChevronRight } from "@lucide/svelte"
   import { enhance } from '$app/forms'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
@@ -11,6 +11,10 @@
   import { goto, invalidate } from "$app/navigation"
   import { page } from "$app/state"
   import size from "$lib/size"
+  import database from "$lib/surrealdb"
+  import { encryptFile, decryptFile, encryptFileChunk, deriveKey } from '$lib/encryption.js'
+  import { RecordId } from "surrealdb"
+  import { decodeHex } from "@std/encoding"
 
   let { data } = $props()
 
@@ -40,6 +44,8 @@
 
   let large_progress = $state(0)
   let uploading = $state(false)
+
+  let iframe_timeout
 
   const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -112,13 +118,19 @@
     loading = true
     uploading = true
 
-    const hash = await sha1(new Uint8Array(await file.arrayBuffer()))
     const name = file.name
     const type = file.type
     const size = file.size
 
     if(size < is_big_size){
-      console.log(hash)
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+      const encryption_key = await deriveKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+      const converted_file = new Uint8Array(await file.arrayBuffer())
+      const encrypted_file = await encryptFile(converted_file, encryption_key)
+
+      const hash = await sha1(encrypted_file)
+
       const response = await fetch(`${PUBLIC_SERVER}/jetsam/small/start`,
         {
           method: 'POST',
@@ -127,7 +139,7 @@
             sha1: hash, 
             type: type, 
             name: name, 
-            size: size,
+            size: size+16, // account for the 16 byte iv
             downloads: downloads,
             retention: retention
           })
@@ -139,17 +151,19 @@
         uploading = false
         return
       }
+
       const info = await response.json()
+
       const upload = await fetch(info.url, {
         method: 'POST',
         headers: { 
           'Authorization': info.token,
           'X-Bz-File-Name': info.name,
-          'Content-Type': info.type,
+          'Content-Type': 'application/octet-stream',
           'Content-Length': info.size,
           'X-Bz-Content-Sha1': info.sha1
         },
-        body: file
+        body: encrypted_file
       })
       if(!upload.ok){ 
         addToast({ message: await upload.text(), type: 'error', auto: true })
@@ -182,18 +196,24 @@
       const chunk_size = 6 * ( 1024 ** 2 )
       const total_chunks = Math.ceil(size / chunk_size)
       const chunks = []
+      
+      const nonce = crypto.getRandomValues(new Uint8Array(12))
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+      const encryption_key = await deriveKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
 
       for (let i = 0; i < total_chunks; i++){
         const start = i * chunk_size
         const end = Math.min(start + chunk_size, size)
         const chunk = await file.slice(start, end).arrayBuffer()
-        const chunk_hash = await sha1(new Uint8Array(chunk))
+        const encrypted_chunk = await encryptFileChunk(chunk, encryption_key, nonce, start)
+        const chunk_hash = await sha1(encrypted_chunk)
         const chunk_size_current = chunk.byteLength
         chunks.push({
           index: 1+i,
           sha1: chunk_hash,
           size: chunk_size_current,
-          slice: chunk
+          slice: encrypted_chunk
         })
       }
 
@@ -202,10 +222,9 @@
           method: 'POST',
           credentials: 'include',
           body: JSON.stringify({
-            sha1: hash, 
             type: type, 
             name: name, 
-            size: size,
+            size: size+(16*chunks.length), // account for the 16 byte iv
             downloads: downloads,
             retention: retention,
             chunks: total_chunks
@@ -292,6 +311,35 @@
   }
 
   async function downloadCargo(){
+    const is_big_size = 9 * ( 1024 ** 2 )
+    if(cargo_info.size >= is_big_size){
+      prepareLargeDownload()
+    } else {
+      downloadSmallCargo()
+    }
+  }
+
+  async function prepareLargeDownload(){
+    loading = true
+
+    const db = await database()
+    const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+    const decryption_key = await deriveKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+
+    globalThis.decryption_keys = globalThis.decryption_keys || {}
+    globalThis.decryption_keys['canal'] = decryption_key
+
+    const iframe = document.createElement('iframe')
+    iframe.style.display = 'none'
+    iframe.src = `/canal/jetsam/download?url=${encodeURIComponent(`${PUBLIC_SERVER}/jetsam/cargo/${cargo_info.id.split(':')[1]}`)}`
+    document.body.appendChild(iframe)
+    iframe_timeout = setTimeout(() => iframe.remove(), 60000)
+
+    addToast({ message: 'Download starting now...', type: 'success', auto: true })
+    loading = false
+  }
+
+  async function downloadSmallCargo(){
     cargo_loading = true
     const res = await fetch(`${PUBLIC_SERVER}/jetsam/cargo/${cargo_info.id.split(':')[1]}/download`, {
       method: 'GET',
@@ -301,14 +349,21 @@
       cargo_loading = false
       addToast({ message: await res.text(), type: 'error', auto: true })
     } else {
-      await invalidate('get:jetsam')
-      addToast({ message: 'Download starting now...', type: 'success', auto: true })
-      cargo_loading = false
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+      const decryption_key = await deriveKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+
+      const decrypted_file = await decryptFile(await res.arrayBuffer(), decryption_key)
+      const blob = new Blob([decrypted_file], { type: cargo_info.type })
       const a = Object.assign(document.createElement('a'), {
-        href: URL.createObjectURL(await res.blob()),
+        href: URL.createObjectURL(blob),
         download: cargo_info.name
       })
       a.click()
+
+      await invalidate('get:jetsam')
+      addToast({ message: 'Download starting now...', type: 'success', auto: true })
+      cargo_loading = false
     }
   }
   
@@ -350,7 +405,22 @@
     }
   })
 
-  onDestroy(() => {cleanupToasts()})
+  onMount(() => {
+    navigator.serviceWorker?.addEventListener('message', (event) => {
+      if (event.data.type === 'KEY_REQUEST') {
+        const key = globalThis.decryption_keys?.[event.data.key_id];
+        if (key) {
+          event.data.port.postMessage({ key });
+          delete globalThis.decryption_keys[event.data.key_id];
+        }
+      }
+    })
+  })
+
+  onDestroy(() => {
+    cleanupToasts()
+    clearTimeout(iframe_timeout)
+  })
 </script>
 
 <svelte:head>
