@@ -11,7 +11,7 @@
   import { decodeHex } from '@std/encoding'
   import { PUBLIC_SERVER } from '$env/static/public'
   import database from '$lib/surrealdb'
-    import { authenticationPass, encryptionPass } from '$lib/encryption.js';
+    import { authenticationPass, encryptionPass, hashAuthenticationPass, hashEncryptionPass } from '$lib/encryption.js';
 
   let { data } = $props()
 
@@ -200,36 +200,18 @@
           cancel()
           loading = false
         } else { 
-          const hash_auth = await argon2id({
-            password: authenticationPass(passphrase),
-            salt: decodeHex(salt),
-            memorySize: 64000,
-            iterations: 10,
-            hashLength: 32,
-            outputType: 'hex',
-            parallelism: 1
-          })
+          const hash_auth = await hashAuthenticationPass(passphrase, decodeHex(salt))
+          formData.append('passphrase', hash_auth)
+          formData.append('flare', flare)
+          formData.append('counterflare', counterflare)
 
-          const hash_encrypt = await argon2id({
-            password: encryptionPass(passphrase),
-            salt: decodeHex(salt),
-            memorySize: 64000,
-            iterations: 10,
-            hashLength: 32,
-            outputType: 'hex',
-            parallelism: 1
-          })
-
+          const hash_encrypt = await hashEncryptionPass(passphrase, decodeHex(salt))
           const db = await database()
           db.upsert(new RecordId('crypto', 'wave'), {key: hash_encrypt}).catch(err => {
             addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
             cancel()
             loading = false
           })
-
-          formData.append('passphrase', hash_auth)
-          formData.append('flare', flare)
-          formData.append('counterflare', counterflare)
         }
         return async ({result, update}) => {
           if(result.data?.posterror){ 

@@ -8,7 +8,7 @@
   import { argon2id } from 'hash-wasm'
   import { decodeHex } from '@std/encoding'
   import { computeHMAC } from '$lib/hmac.js'
-  import { authenticationPass } from '$lib/encryption.js'
+  import { authenticationPass, hashAuthenticationPass } from '$lib/encryption.js'
 
   let { data } = $props()
 
@@ -38,15 +38,7 @@
     loading = true
     const phrase = diceware()
     const salt = decodeHex(data.passphrase_salt)
-    const hash = await argon2id({
-      password: authenticationPass(phrase),
-      salt: salt,
-      memorySize: 64000,
-      iterations: 10,
-      hashLength: 32,
-      outputType: 'hex',
-      parallelism: 1
-    })
+    const hash = await hashAuthenticationPass(phrase, salt)
     
     const res = await fetch(`${PUBLIC_SERVER}/canal/activate`, {
       method: 'PATCH',

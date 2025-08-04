@@ -17,7 +17,7 @@
   import { onDestroy } from "svelte"
   import database from "$lib/surrealdb"
   import { RecordId } from "surrealdb";
-  import { authenticationPass, deriveKey, encryptionPass } from "$lib/encryption.js";
+  import { authenticationPass, deriveKey, encryptionPass, hashAuthenticationPass, hashEncryptionPass } from "$lib/encryption.js";
 
   let { data, form } = $props()
   let active_session = $state(null)
@@ -113,35 +113,18 @@
           loading = false
         } else {
           const saltBuffer = decodeHex(salt)
-          const hash_auth = await argon2id({
-            password: authenticationPass(passphrase),
-            salt: saltBuffer,
-            memorySize: 64000,
-            iterations: 10,
-            hashLength: 32,
-            outputType: 'hex',
-            parallelism: 1
-          })
 
-          const hash_encrypt = await argon2id({
-            password: encryptionPass(passphrase),
-            salt: saltBuffer,
-            memorySize: 64000,
-            iterations: 10,
-            hashLength: 32,
-            outputType: 'hex',
-            parallelism: 1
-          })
+          const hash_auth = await hashAuthenticationPass(passphrase, saltBuffer)
+          formData.append('passphrase_hash', hash_auth)
+          formData.append('sequence', sequence)
 
+          const hash_encrypt = await hashEncryptionPass(passphrase, saltBuffer)
           const db = await database()
           db.upsert(new RecordId('crypto', 'canal'), {key: hash_encrypt}).catch(err => {
             addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
             cancel()
             loading = false
           })
-
-          formData.append('passphrase_hash', hash_auth)
-          formData.append('sequence', sequence)
         }
         
         return async ({result, update}) => {
