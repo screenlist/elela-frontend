@@ -1,3 +1,8 @@
+import { x25519 } from '@noble/curves/ed25519'
+import { hkdf } from '@noble/hashes/hkdf'
+import { sha256 } from '@noble/hashes/sha2'
+import { argon2id } from 'hash-wasm'
+
 export async function encryptFileChunk(chunk, key, nonce, offset){
   const iv = new Uint8Array(16)
   iv.set(nonce)
@@ -60,11 +65,46 @@ export async function deriveKey(hash, salt){
   )
 }
 
-export function authenticationPass(str){
+export async function hashAuthenticationPass(pass, salt){
+  return await argon2id({
+    password: authenticationPass(pass),
+    salt: salt,
+    memorySize: 64000,
+    iterations: 6,
+    hashLength: 32,
+    outputType: 'hex',
+    parallelism: 1
+  })
+}
+
+export async function hashEncryptionPass(pass, salt){
+  return await argon2id({
+    password: encryptionPass(pass),
+    salt: salt,
+    memorySize: 64000,
+    iterations: 6,
+    hashLength: 32,
+    outputType: 'hex',
+    parallelism: 1
+  })
+}
+
+export function generateWaveKeyPair(pass, salt){
+  const seed = hkdf(sha256, pass, salt, 'wave', 32)
+  return x25519.keygen(seed)
+}
+
+export function generateBridgeKeyPair(pass, salt){
+  const seed = hkdf(sha256, pass, salt, 'bridge', 32)
+  return x25519.keygen(seed)
+}
+
+function authenticationPass(str){
   return str+' for authentication'
 }
 
-export function encryptionPass(str){
+
+function encryptionPass(str){
   return str+' for encryption'
 }
 

@@ -10,6 +10,7 @@ export const actions = {
     const counterflare = values.counterflare
     const anchor = values.passphrase_hash
     const salt = values.passphrase_salt
+    const public_key = values.public_key
 
     const res = await fetch(`${PUBLIC_SERVER}/canal/wave`,
       {

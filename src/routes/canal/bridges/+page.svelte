@@ -4,6 +4,7 @@
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
   import { onDestroy } from 'svelte'
+  import database from "$lib/surrealdb";
 
   let { data } = $props()
   
@@ -30,6 +31,10 @@
   <div class="card card-border card-sm bg-base-300 w-full sm:w-1/2 md:w-2/5 lg:w-1/3 xl:w-1/4">
     <form id="new" class="card-body justify-between" method="POST" action="?/bridge" use:enhance={({formData}) => {
       loading = true
+      const time = formData.get('time')
+      const date = formData.get('date')
+      const timestamp = new Date(`${date}T${time}`)
+      
       return async ({result, update}) => {
         if(result.data?.posterror){ 
           addToast({ message: result.data.posterror, type: 'error', auto: true }) 

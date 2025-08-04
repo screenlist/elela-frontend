@@ -26,6 +26,8 @@
 		"@fontsource-variable/inter": "^5.2.5",
 		"@fontsource-variable/jetbrains-mono": "^5.2.5",
 		"@lucide/svelte": "^0.503.0",
+		"@noble/curves": "^1.9.6",
+		"@noble/hashes": "^1.8.0",
 		"@reown/appkit": "^1.7.4",
 		"@reown/appkit-adapter-wagmi": "^1.7.4",
 		"@std/encoding": "npm:@jsr/std__encoding@^1.0.10",

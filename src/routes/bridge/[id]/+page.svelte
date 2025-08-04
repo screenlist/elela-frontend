@@ -7,6 +7,10 @@
   import { sha1 } from 'hash-wasm'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
+  import database from "$lib/surrealdb"
+  import { sha256 } from "@noble/hashes/sha2"
+  import { hkdf } from "@noble/hashes/hkdf"
+  import { x25519 } from '@noble/curves/ed25519.js'
 
   let { data } = $props()
 
