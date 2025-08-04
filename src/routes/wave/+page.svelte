@@ -8,6 +8,7 @@
   import { encodeHex } from '@std/encoding'
   import { argon2id } from 'hash-wasm'
   import { PUBLIC_SERVER } from '$env/static/public'
+    import { authenticationPass } from '$lib/encryption';
 
   let wave = $state(null)
   let loading = $state(false)
@@ -48,7 +49,7 @@
       } else { 
         const salt = crypto.getRandomValues(new Uint8Array(16))
         const hash = await argon2id({
-          password: passphrase,
+          password: authenticationPass(passphrase),
           salt: salt,
           memorySize: 64000,
           iterations: 3,

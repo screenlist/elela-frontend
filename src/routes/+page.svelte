@@ -17,7 +17,7 @@
   import { onDestroy } from "svelte"
   import database from "$lib/surrealdb"
   import { RecordId } from "surrealdb";
-    import { deriveKey } from "$lib/encryption.js";
+  import { authenticationPass, deriveKey, encryptionPass } from "$lib/encryption.js";
 
   let { data, form } = $props()
   let active_session = $state(null)
@@ -113,8 +113,18 @@
           loading = false
         } else {
           const saltBuffer = decodeHex(salt)
-          const hash = await argon2id({
-            password: passphrase,
+          const hash_auth = await argon2id({
+            password: authenticationPass(passphrase),
+            salt: saltBuffer,
+            memorySize: 64000,
+            iterations: 3,
+            hashLength: 32,
+            outputType: 'hex',
+            parallelism: 1
+          })
+
+          const hash_encrypt = await argon2id({
+            password: encryptionPass(passphrase),
             salt: saltBuffer,
             memorySize: 64000,
             iterations: 3,
@@ -124,13 +134,13 @@
           })
 
           const db = await database()
-          db.upsert(new RecordId('crypto', 'canal'), {key: hash}).catch(err => {
+          db.upsert(new RecordId('crypto', 'canal'), {key: hash_encrypt}).catch(err => {
             addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
             cancel()
             loading = false
           })
 
-          formData.append('passphrase_hash', hash)
+          formData.append('passphrase_hash', hash_auth)
           formData.append('sequence', sequence)
         }
         

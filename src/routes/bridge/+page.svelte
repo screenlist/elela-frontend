@@ -11,6 +11,7 @@
   import { decodeHex } from '@std/encoding'
   import { PUBLIC_SERVER } from '$env/static/public'
   import database from '$lib/surrealdb'
+    import { authenticationPass, encryptionPass } from '$lib/encryption.js';
 
   let { data } = $props()
 
@@ -199,8 +200,18 @@
           cancel()
           loading = false
         } else { 
-          const hash = await argon2id({
-            password: passphrase,
+          const hash_auth = await argon2id({
+            password: authenticationPass(passphrase),
+            salt: decodeHex(salt),
+            memorySize: 64000,
+            iterations: 3,
+            hashLength: 32,
+            outputType: 'hex',
+            parallelism: 1
+          })
+
+          const hash_encrypt = await argon2id({
+            password: encryptionPass(passphrase),
             salt: decodeHex(salt),
             memorySize: 64000,
             iterations: 3,
@@ -210,13 +221,13 @@
           })
 
           const db = await database()
-          db.upsert(new RecordId('crypto', 'wave'), {key: hash}).catch(err => {
+          db.upsert(new RecordId('crypto', 'wave'), {key: hash_encrypt}).catch(err => {
             addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
             cancel()
             loading = false
           })
 
-          formData.append('passphrase', hash)
+          formData.append('passphrase', hash_auth)
           formData.append('flare', flare)
           formData.append('counterflare', counterflare)
         }

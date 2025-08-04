@@ -60,6 +60,14 @@ export async function deriveKey(hash, salt){
   )
 }
 
+export function authenticationPass(str){
+  return str+' for authentication'
+}
+
+export function encryptionPass(str){
+  return str+' for encryption'
+}
+
 function uint32ToBytes(num) {
   const arr = new Uint8Array(4)
   
