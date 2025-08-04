@@ -42,7 +42,7 @@
       password: authenticationPass(phrase),
       salt: salt,
       memorySize: 64000,
-      iterations: 3,
+      iterations: 10,
       hashLength: 32,
       outputType: 'hex',
       parallelism: 1
