@@ -8,7 +8,7 @@
   import { encodeHex } from '@std/encoding'
   import { argon2id } from 'hash-wasm'
   import { PUBLIC_SERVER } from '$env/static/public'
-  import { authenticationPass, encryptionPass, generateWaveKeyPair, hashAuthenticationPass, hashEncryptionPass } from '$lib/encryption'
+  import { generateWaveKeyPair, hashAuthenticationPass, hashEncryptionPass } from '$lib/encryption'
 
   let wave = $state(null)
   let loading = $state(false)
@@ -53,9 +53,10 @@
         formData.append('passphrase_salt', encodeHex(salt))
 
         const hash_encrypt = await hashEncryptionPass(passphrase, salt)
-        const counterflare = formData.get('counterflare')
-        const pair = generateWaveKeyPair(hash_encrypt, counterflare)
+        const gen_salt = encodeHex(crypto.getRandomValues(new Uint8Array(16)))
+        const pair = generateWaveKeyPair(hash_encrypt, gen_salt)
         formData.append('public_key', encodeHex(pair.publicKey))
+        formData.append('regeneration_salt', gen_salt)
       }
 
       return async ({result, update}) => {

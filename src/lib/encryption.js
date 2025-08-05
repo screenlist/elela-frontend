@@ -2,6 +2,7 @@ import { x25519 } from '@noble/curves/ed25519'
 import { hkdf } from '@noble/hashes/hkdf'
 import { sha256 } from '@noble/hashes/sha2'
 import { argon2id } from 'hash-wasm'
+import { encodeHex, decodeHex } from '@std/encoding'
 
 export async function encryptFileChunk(chunk, key, nonce, offset){
   const iv = new Uint8Array(16)
@@ -40,7 +41,7 @@ export async function decryptFile(chunk, key){
   ))
 }
 
-export async function deriveKey(hash, salt){
+export async function deriveFileKey(hash, salt){
   const encoder = new TextEncoder()
 
   const material = await crypto.subtle.importKey(
@@ -70,7 +71,7 @@ export async function hashAuthenticationPass(pass, salt){
     password: authenticationPass(pass),
     salt: salt,
     memorySize: 64000,
-    iterations: 6,
+    iterations: 3,
     hashLength: 32,
     outputType: 'hex',
     parallelism: 1
@@ -82,21 +83,70 @@ export async function hashEncryptionPass(pass, salt){
     password: encryptionPass(pass),
     salt: salt,
     memorySize: 64000,
-    iterations: 6,
+    iterations: 3,
     hashLength: 32,
     outputType: 'hex',
     parallelism: 1
   })
 }
 
-export function generateWaveKeyPair(pass, salt){
-  const seed = hkdf(sha256, pass, salt, 'wave', 32)
+export function generateWaveKeyPair(pass_hash, salt){
+  const seed = hkdf(sha256, pass_hash, salt, 'wave', 32)
   return x25519.keygen(seed)
 }
 
-export function generateBridgeKeyPair(pass, salt){
-  const seed = hkdf(sha256, pass, salt, 'bridge', 32)
+export function generateBridgeKeyPair(pass_hash, salt){
+  const seed = hkdf(sha256, pass_hash, salt, 'bridge', 32)
   return x25519.keygen(seed)
+}
+
+export async function deriveSharedTextKey(material){
+  return await crypto.subtle.importKey(
+    'raw',
+    material,
+    { name: 'AES-GCM' },
+    true,
+    ['encrypt', 'decrypt']
+  )
+}
+
+export async function deriveSharedFileKey(material){
+  return await crypto.subtle.importKey(
+    'raw',
+    material,
+    { name: 'AES-CTR' },
+    true,
+    ['encrypt', 'decrypt']
+  )
+}
+
+export async function encryptText(text, key){
+  const encoder = new TextEncoder()
+  const iv = crypto.getRandomValues(new Uint8Array(12))
+
+  const content =  await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    encoder.encode(text)
+  )
+
+  const combined = new Uint8Array( [...iv, ...new Uint8Array(content)] )
+
+  return encodeHex(combined)
+}
+
+export async function decryptText(text, key){
+  const decoder = new TextDecoder()
+  const content = decodeHex(text)
+  const iv = content.subarray(0, 12)
+  const slice = content.subarray(12)
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    slice
+  )
+
+  return decoder.decode(decrypted)
 }
 
 function authenticationPass(str){

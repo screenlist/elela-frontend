@@ -11,6 +11,7 @@ export const actions = {
     const anchor = values.passphrase_hash
     const salt = values.passphrase_salt
     const public_key = values.public_key
+    const regeneration_salt = values.regeneration_salt
 
     const res = await fetch(`${PUBLIC_SERVER}/canal/wave`,
       {
@@ -22,7 +23,9 @@ export const actions = {
           flare: flare,
           counterflare: counterflare,
           anchor: anchor,
-          salt: salt
+          salt: salt,
+          public_key: public_key,
+          regeneration_salt: regeneration_salt
         })
       }
     )

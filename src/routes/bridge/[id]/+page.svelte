@@ -7,10 +7,13 @@
   import { sha1 } from 'hash-wasm'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
+  import { RecordId } from "surrealdb"
   import database from "$lib/surrealdb"
   import { sha256 } from "@noble/hashes/sha2"
   import { hkdf } from "@noble/hashes/hkdf"
   import { x25519 } from '@noble/curves/ed25519.js'
+  import { decryptFile, deriveSharedTextKey, deriveSharedFileKey, encryptFile, generateWaveKeyPair, encryptText, decryptText, generateBridgeKeyPair } from "$lib/encryption.js"
+  import { encodeHex } from "@std/encoding"
 
   let { data } = $props()
 
@@ -46,6 +49,9 @@
   let opened = $state({})
   let opening = $state({})
 
+  let text_shared_key
+  let file_shared_key
+
   const formatter = new Intl.NumberFormat('en-ZA', {
     minimumIntegerDigits: 2,
   })
@@ -55,11 +61,11 @@
     if(image){
       if(sender?.readyState === WebSocket.OPEN){
         const cargo = await uploadImage()
-        console.log(cargo)
         if(cargo){
+          const encrypted_text = await encryptText(text, text_shared_key)
           sender.send(JSON.stringify({
             type: 'text',
-            data: { message: text, cargo: cargo }
+            data: { message: encrypted_text, cargo: cargo }
           }))
           text = ''
           removeImage()
@@ -69,9 +75,10 @@
       }
     } else {
       if(text.length > 0 && sender?.readyState === WebSocket.OPEN){
+        const encrypted_text = await encryptText(text, text_shared_key)
         sender.send(JSON.stringify({
           type: 'text',
-          data: { message: text }
+          data: { message: encrypted_text }
         }))
         text = ''
         scrollBottom()
@@ -104,12 +111,19 @@
       )
     })
     
-		socket.addEventListener('message', (ws) => {
+		socket.addEventListener('message', async (ws) => {
       
       const msg = JSON.parse(ws.data)
 
       if(msg.type === 'text_history'){
-        msg.data.forEach(val => {
+        const decrypted_messages = await Promise.all(
+          msg.data.map(async val => {
+            val.body = await decryptText(val.body, text_shared_key)
+            return val
+          })
+        )
+        
+        decrypted_messages.forEach(val => {
           if(messages.findIndex(item => item.id === val.id) < 0){
             binarySearchInsertAsc(val)
           }
@@ -118,6 +132,7 @@
 
       if(msg.type === 'text'){
         if(messages.findIndex(item => item.id === msg.data.id) < 0){
+          msg.data.body = await decryptText(msg.data.body, text_shared_key)
           binarySearchInsertAsc(msg.data)
           scrollBottom()
         }
@@ -133,12 +148,11 @@
       }
 
       if(msg.type === 'left'){
-        console.log(msg.data)
         if(msg.from !== person){ is_peer_online = false }
       }
 
       if(msg.type === 'error'){
-        console.log(msg.data)
+        addToast({ message: msg.data.message, type: 'error', auto: true })
       }
 
     })
@@ -212,7 +226,6 @@
     document.body.appendChild(file_input)
 
     file_input.addEventListener('change', () => {
-      console.log('something has changed')
       const file = file_input.files[0]
       if(file){
         image = file
@@ -233,10 +246,11 @@
   }
 
   async function uploadImage(){
-    const hash = await sha1(new Uint8Array(await image.arrayBuffer()))
+    const encrypted_image = await encryptFile(new Uint8Array(await image.arrayBuffer()), file_shared_key)
+    const hash = await sha1(encrypted_image)
     const name = image.name
     const type = image.type
-    const size = image.size
+    const size = image.size+16 // Account for 16 byte IV
     const response = await fetch(`${PUBLIC_SERVER}/jetsam/connection/${page.params.id}`,
       {
         method: 'POST',
@@ -258,7 +272,7 @@
         'Content-Length': info.size,
         'X-Bz-Content-Sha1': info.sha1
       },
-      body: image
+      body: encrypted_image
     })
     if(!upload.ok){ 
       addToast({ message: await upload.text(), type: 'error', auto: true }); 
@@ -294,7 +308,9 @@
       reader.onload = e => {
         open[cargo] = e.target.result
       }
-      reader.readAsDataURL(await response.blob())
+      const decrypted_file = await decryptFile(await response.arrayBuffer(), file_shared_key)
+      const blob = new Blob([decrypted_file], { type: 'application/octet-stream' })
+      reader.readAsDataURL(blob)
       opening[cargo] = false
     }
   }
@@ -303,13 +319,43 @@
     cleanUp()
   })
 
-  onMount(() => {
+  onMount(async () => {
     if(getCookie('wave_session')){ person = data.bridge.wave_id; person_type = 'wave' }
     if(getCookie('canal_session')){ person = data.bridge.bridge_id; person_type = 'bridge' }
+
+    if(person_type === 'wave'){
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'wave'))
+      const pair = generateWaveKeyPair(encoded_key.key, data.bridge.wave_regeneration)
+      const secret_binary = x25519.getSharedSecret(encodeHex(pair.secretKey), data.bridge.bridge_key)
+      const secret_material = hkdf(sha256, secret_binary, data.bridge.connection_id, 'bridge', 32)
+      text_shared_key = await deriveSharedTextKey(secret_material)
+      file_shared_key = await deriveSharedFileKey(secret_material)
+    } else {
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+      const pair = generateBridgeKeyPair(encoded_key.key, data.bridge.bridge_regeneration)
+      const secret_binary = x25519.getSharedSecret(encodeHex(pair.secretKey), data.bridge.wave_key)
+      const secret_material = hkdf(sha256, secret_binary, data.bridge.connection_id, 'bridge', 32)
+      text_shared_key = await deriveSharedTextKey(secret_material)
+      file_shared_key = await deriveSharedFileKey(secret_material)
+    }
+
     isPageActive = true
     realtime()
     counter()
-    messages.push(...data.bridge.messages)
+    const decrypted_messages = await Promise.all(
+      data.bridge.messages.map(async val => {
+        try {
+          val.body = await decryptText(val.body, text_shared_key)
+          return val
+        } catch (error) {
+          console.log(error)
+        }
+      })
+    )
+    // console.log(decrypted_messages)
+    messages.push(...decrypted_messages)
     scrollBottom()
   })
 
@@ -336,6 +382,8 @@
   })
 
   $effect(() => { scrollBottom() })
+
+  // $inspect(data.bridge).with(console.log)
 
   function returnLink(){
     if(person === data.bridge.bridge_id && isConnectionAllowed){
