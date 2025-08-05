@@ -11,7 +11,8 @@
   import { decodeHex } from '@std/encoding'
   import { PUBLIC_SERVER } from '$env/static/public'
   import database from '$lib/surrealdb'
-    import { authenticationPass, encryptionPass, hashAuthenticationPass, hashEncryptionPass } from '$lib/encryption.js';
+  import { hashAuthenticationPass, hashEncryptionPass } from '$lib/encryption.js'
+  import { RecordId } from "surrealdb"
 
   let { data } = $props()
 
@@ -207,7 +208,7 @@
 
           const hash_encrypt = await hashEncryptionPass(passphrase, decodeHex(salt))
           const db = await database()
-          db.upsert(new RecordId('crypto', 'wave'), {key: hash_encrypt}).catch(err => {
+          await db.upsert(new RecordId('crypto', 'wave'), {key: hash_encrypt}).catch(err => {
             addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
             cancel()
             loading = false

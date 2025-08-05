@@ -8,7 +8,7 @@
   import { argon2id } from 'hash-wasm'
   import { decodeHex } from '@std/encoding'
   import { computeHMAC } from '$lib/hmac.js'
-  import { authenticationPass, hashAuthenticationPass } from '$lib/encryption.js'
+  import { hashAuthenticationPass } from '$lib/encryption.js'
 
   let { data } = $props()
 

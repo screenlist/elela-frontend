@@ -17,7 +17,7 @@
   import { onDestroy } from "svelte"
   import database from "$lib/surrealdb"
   import { RecordId } from "surrealdb";
-  import { authenticationPass, deriveKey, encryptionPass, hashAuthenticationPass, hashEncryptionPass } from "$lib/encryption.js";
+  import { hashAuthenticationPass, hashEncryptionPass } from "$lib/encryption.js";
 
   let { data, form } = $props()
   let active_session = $state(null)
@@ -120,7 +120,7 @@
 
           const hash_encrypt = await hashEncryptionPass(passphrase, saltBuffer)
           const db = await database()
-          db.upsert(new RecordId('crypto', 'canal'), {key: hash_encrypt}).catch(err => {
+          await db.upsert(new RecordId('crypto', 'canal'), {key: hash_encrypt}).catch(err => {
             addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
             cancel()
             loading = false

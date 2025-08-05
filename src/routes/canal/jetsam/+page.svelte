@@ -12,7 +12,7 @@
   import { page } from "$app/state"
   import size from "$lib/size"
   import database from "$lib/surrealdb"
-  import { encryptFile, decryptFile, encryptFileChunk, deriveKey } from '$lib/encryption.js'
+  import { encryptFile, decryptFile, encryptFileChunk, deriveFileKey } from '$lib/encryption.js'
   import { RecordId } from "surrealdb"
   import { decodeHex } from "@std/encoding"
 
@@ -125,7 +125,7 @@
     if(size < is_big_size){
       const db = await database()
       const encoded_key = await db.select(new RecordId('crypto', 'canal'))
-      const encryption_key = await deriveKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+      const encryption_key = await deriveFileKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
       const converted_file = new Uint8Array(await file.arrayBuffer())
       const encrypted_file = await encryptFile(converted_file, encryption_key)
 
@@ -200,7 +200,7 @@
       const nonce = crypto.getRandomValues(new Uint8Array(12))
       const db = await database()
       const encoded_key = await db.select(new RecordId('crypto', 'canal'))
-      const encryption_key = await deriveKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+      const encryption_key = await deriveFileKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
 
       for (let i = 0; i < total_chunks; i++){
         const start = i * chunk_size
@@ -324,7 +324,7 @@
 
     const db = await database()
     const encoded_key = await db.select(new RecordId('crypto', 'canal'))
-    const decryption_key = await deriveKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+    const decryption_key = await deriveFileKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
 
     globalThis.decryption_keys = globalThis.decryption_keys || {}
     globalThis.decryption_keys['canal'] = decryption_key
@@ -351,8 +351,7 @@
     } else {
       const db = await database()
       const encoded_key = await db.select(new RecordId('crypto', 'canal'))
-      const decryption_key = await deriveKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
-
+      const decryption_key = await deriveFileKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
       const decrypted_file = await decryptFile(await res.arrayBuffer(), decryption_key)
       const blob = new Blob([decrypted_file], { type: cargo_info.type })
       const a = Object.assign(document.createElement('a'), {
