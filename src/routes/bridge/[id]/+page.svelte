@@ -52,6 +52,9 @@
   let text_shared_key
   let file_shared_key
 
+  let storage = $state(0)
+  let storage_display = $derived(`${(Math.round((storage / (1024 ** 2)) * 100) / 100).toFixed(2)} MB`)
+
   const formatter = new Intl.NumberFormat('en-ZA', {
     minimumIntegerDigits: 2,
   })
@@ -118,8 +121,12 @@
       if(msg.type === 'text_history'){
         const decrypted_messages = await Promise.all(
           msg.data.map(async val => {
-            val.body = await decryptText(val.body, text_shared_key)
-            return val
+            try {
+              val.body = await decryptText(val.body, text_shared_key)
+              return val
+            } catch (err){
+              return val
+            }
           })
         )
         
@@ -132,7 +139,11 @@
 
       if(msg.type === 'text'){
         if(messages.findIndex(item => item.id === msg.data.id) < 0){
-          msg.data.body = await decryptText(msg.data.body, text_shared_key)
+          try {
+            msg.data.body = await decryptText(msg.data.body, text_shared_key)
+          } catch (err) {
+            addToast({ message: 'Could not decrypt message', type: 'error', auto: true })
+          }
           binarySearchInsertAsc(msg.data)
           scrollBottom()
         }
@@ -141,6 +152,10 @@
       if(msg.type === 'typing'){
         time_since_peer_typed = new Date()
         is_peer_typing = true
+      }
+
+      if(msg.type === 'storage'){
+        storage = msg.data
       }
 
       if(msg.type === 'joined'){
@@ -308,9 +323,14 @@
       reader.onload = e => {
         open[cargo] = e.target.result
       }
-      const decrypted_file = await decryptFile(await response.arrayBuffer(), file_shared_key)
-      const blob = new Blob([decrypted_file], { type: 'application/octet-stream' })
-      reader.readAsDataURL(blob)
+
+      try {
+        const decrypted_file = await decryptFile(await response.arrayBuffer(), file_shared_key)
+        const blob = new Blob([decrypted_file], { type: 'application/octet-stream' })
+        reader.readAsDataURL(blob)
+      } catch (error) {
+        opened[cargo] = 'Decryption error'
+      }
       opening[cargo] = false
     }
   }
@@ -350,12 +370,12 @@
           val.body = await decryptText(val.body, text_shared_key)
           return val
         } catch (error) {
-          console.log(error)
+          return val
         }
       })
     )
-    // console.log(decrypted_messages)
     messages.push(...decrypted_messages)
+    storage = data.bridge.total_storage
     scrollBottom()
   })
 
@@ -382,8 +402,6 @@
   })
 
   $effect(() => { scrollBottom() })
-
-  // $inspect(data.bridge).with(console.log)
 
   function returnLink(){
     if(person === data.bridge.bridge_id && isConnectionAllowed){
@@ -453,6 +471,7 @@
               </span>
             {/if}
           </span>
+          <span class="badge font-semibold ml-2 badge-primary">{storage_display}</span>
         </div> 
       {/if}
       <div bind:this={msgContainer} class="flex-1 overflow-y-auto scrollbar-hide">
@@ -499,7 +518,7 @@
                     {/if}
                   </div>
                 {:else}
-                  <span class={`chat-bubble text-sm ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
+                  <span class={`chat-bubble text-sm text-wrap ${msg.in === person ? 'chat-bubble-neutral' : 'chat-bubble-accent'}`}>
                     {msg.body}
                   </span>
                 {/if}
@@ -507,7 +526,7 @@
             {/each}
           {:else if time_to_commencement > 0 && time_to_destruction > 0}
             <div class="flex flex-col w-full justify-center items-center pb-12">
-              <div class="radial-progress bg-primary border-primary border-4 text-base-100 text-xl font-semibold" style={`--value:${time_elapsed_before_commencement}; --size:15rem; --thickness: 1rem;`} aria-valuenow={time_elapsed_before_commencement} role="progressbar">
+              <div class="radial-progress bg-primary border-primary border-4 text-base-100 text-xl font-semibold font-mono" style={`--value:${time_elapsed_before_commencement}; --size:15rem; --thickness: 1rem;`} aria-valuenow={time_elapsed_before_commencement} role="progressbar">
                 <span class="countdown">
                   <span style={`--value:${Math.floor( (time_to_commencement / (1000 * 60 * 60 * 24)) )};`} aria-live="polite" aria-label={`${Math.floor( (time_to_commencement / (1000 * 60 * 60 * 24)) )}`}>
                     {Math.floor( (time_to_commencement / (1000 * 60 * 60 * 24)) )}
@@ -527,14 +546,14 @@
                   s
                 </span>
               </div>
-              <h2 class="mt-8 text-lg font-semibold">The bridge will erect soon</h2>
+              <h2 class="mt-8 text-lg font-semibold font-mono">The bridge will erect soon</h2>
             </div>
           {:else if time_to_commencement < 0 && time_to_destruction < 0}
             <div class="flex flex-col w-full justify-center items-center pb-12">
               <figure class="w-full max-w-sm">
                 <img src="/feeling-blue.svg" alt="An illustration of an giant sad face"/>
               </figure>
-              <h2 class="mt-4 text-xl font-semibold">The bridge has collapsed</h2>
+              <h2 class="mt-4 text-xl font-semibold font-mono">The bridge has collapsed</h2>
             </div>
           {/if}
         </div>
