@@ -27,7 +27,7 @@
     description: `Their flare was '${wave.flare}' and you replied with '${wave.counterflare}', visit app.elela.online/bridge to join the chat or check to if you have been accepted.`
   }) }
 
-  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full' });
+  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium' });
   const timeFormatter = new Intl.DateTimeFormat('en-ZA', { timeStyle: 'short' });
 
   onDestroy(() => {cleanupToasts()})
