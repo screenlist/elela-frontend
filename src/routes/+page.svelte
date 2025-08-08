@@ -28,6 +28,7 @@
   let salt = $state(null)
   let sequence = $state(null)
   let passphrase = $state('')
+  let sign_in = $state(false)
   let loading = $state(false)
 
   let group1Class = $derived(sequenceInput.length < 2 ? 'bg-accent text-neutral border-accent' : 'bg-neutral border-neutral text-base-100')
@@ -139,45 +140,52 @@
         }
       }}>
         <h1 class="card-title uppercase">Canal</h1>
-        <span for="passphrase" class="fieldset-legend">Sequence</span>
-        <div class="flex items-center justify-between gap-2">
-          <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${group1Class}`} >
-            {sequenceArray[0]}{sequenceArray[1]}
-          </span>
-          <span class="font-bold text-lg">:</span>
-          <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${group2Class}`} >
-            {sequenceArray[2]}{sequenceArray[3]}
-          </span>
-          <span class="font-bold text-lg">:</span>
-          <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${group3Class}`} >
-            {sequenceArray[4]}{sequenceArray[5]}
-          </span>
-        </div>
-        {#if !salt && !sequence}
-          <div class="grid auto-rows-auto grid-cols-6 gap-2 mt-2 mb-2 w-full">
-            {#each alphabet as letter (letter)}
-              <button style="touch-action: manipulation;" onclick={() => addLetter(letter)} type="button" class="btn btn-neutral btn-square w-full focus:btn-accent" >{letter}</button>
-            {/each}
-            <button onclick={removeLetter} type="button" class="btn btn-error btn-square w-full" >
-              <Delete/>
-            </button>
-            <button onclick={pasteSequence} type="button" class="btn btn-outline btn-square w-full" >
-              <ClipboardPaste />
-            </button>
-            <button disabled={isComplete} onclick={getSalt} type="button" class="btn btn-primary col-span-2 col-start-5 w-full" >Find</button>
+        {#if sign_in === true}
+          <span for="passphrase" class="fieldset-legend">Sequence</span>
+          <div class="flex items-center justify-between gap-2">
+            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${group1Class}`} >
+              {sequenceArray[0]}{sequenceArray[1]}
+            </span>
+            <span class="font-bold text-lg">:</span>
+            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${group2Class}`} >
+              {sequenceArray[2]}{sequenceArray[3]}
+            </span>
+            <span class="font-bold text-lg">:</span>
+            <span class={`flex items-center justify-center tracking-widest text-center text-lg font-bold flex-1 border-2 rounded-lg h-12 ${group3Class}`} >
+              {sequenceArray[4]}{sequenceArray[5]}
+            </span>
           </div>
-        {:else}
-          <fieldset class="fieldset">
-            <label for="passphrase" class="fieldset-legend">Passphrase</label>
-            <input id="passphrase" autocomplete="off" bind:value={passphrase} type="text" class="input w-full" placeholder="all you need is six words" />
-          </fieldset>
-        {/if}
-        <div class="card-actions mt-4 flex-col">
-          {#if salt && sequence}
-            <div class="flex flex-row items-center gap-2 w-full">
-              <button onclick={reset} type="button"  class="btn btn-outline btn-circle"><ArrowLeft /></button>
-              <button type="submit" class="btn btn-primary flex-1">Enter</button>
+          {#if !salt && !sequence}
+            <div class="grid auto-rows-auto grid-cols-7 gap-2 mt-2 mb-2 w-full">
+              {#each alphabet as letter (letter)}
+                <button style="touch-action: manipulation;" onclick={() => addLetter(letter)} type="button" class="btn btn-neutral text-xs w-full focus:btn-accent" >{letter}</button>
+              {/each}
+              <button onclick={removeLetter} type="button" class="btn btn-error btn-square w-full" >
+                <Delete/>
+              </button>
+              <button onclick={pasteSequence} type="button" class="btn btn-outline btn-square w-full" >
+                <ClipboardPaste />
+              </button>
             </div>
+          {:else}
+            <fieldset class="fieldset">
+              <label for="passphrase" class="fieldset-legend">Passphrase</label>
+              <input id="passphrase" autocomplete="off" bind:value={passphrase} type="text" class="input w-full" placeholder="all you need is six words" />
+            </fieldset>
+          {/if}
+        {/if}
+        <div class="card-actions flex-col mt-2">
+          {#if sign_in === true}
+            {#if salt && sequence}
+              <div class="flex flex-row items-center gap-2 w-full">
+                <button onclick={reset} type="button"  class="btn btn-outline btn-circle"><ArrowLeft /></button>
+                <button type="submit" class="btn btn-primary flex-1">Enter</button>
+              </div>
+            {:else}
+              <button disabled={isComplete} onclick={getSalt} type="button" class="btn btn-primary w-full" >Find</button>
+            {/if}
+          {:else}
+            <button onclick={() => {sign_in = true}} type="button" class="btn btn-neutral w-full" >Login</button>
           {/if}
           <div class="divider">OR</div>
           <a href="/generate" class="btn btn-outline w-full">Generate a New Canal</a>
@@ -198,7 +206,7 @@
   {/if} 
   <div class="card card-border mt-4 card-sm bg-base-300 max-w-sm w-full min-w-xs">
     <div class="card-body">
-      <h2 class="card-title uppercase">Bridge</h2>
+      <h2 class="card-title uppercase">Bridge Meetings</h2>
       <div class="card-actions flex-row justify-evenly mt-4">
         <a href="/wave" class="btn btn-neutral w-auto flex-1">Respond</a>
         {#if !active_session}
@@ -209,14 +217,12 @@
   </div>
   <div class="card card-border mt-4 card-sm bg-base-300 max-w-sm w-full min-w-xs">
     <div class="card-body">
-      <h2 class="card-title uppercase">Cargo</h2>
+      <h2 class="card-title uppercase">Public Files</h2>
       <fieldset class="fieldset">
-        <label for="phrase" class="label">Driftkey</label>
-        <input id="phrase" name="phrase" type="password" class="input w-full" placeholder="💦 for your eyes only 😁👀" />
-        <div role="alert" class="alert alert-soft alert-info">
-          <Info />
-          <span>The driftkey is an emoji-words phrase used to access files made public</span>
-        </div>
+        <label for="extension" class="fieldset-legend">Ext Code</label>
+        <input id="extension" autocomplete="off" name="extension" type="password" class="input w-full" placeholder=".laugh" />
+        <label for="phrase" class="fieldset-legend">Passkey</label>
+        <input id="phrase" autocomplete="off" name="phrase" type="password" class="input w-full" placeholder="passkey" />
       </fieldset>
       <div class="card-actions flex-row justify-end mt-4">
         <a href="/cargo" class="btn btn-accent w-auto">Search</a>
