@@ -215,7 +215,7 @@
       </div>
     </div>
   </div>
-  <div class="card card-border mt-4 card-sm bg-base-300 max-w-sm w-full min-w-xs">
+  <!-- <div class="card card-border mt-4 card-sm bg-base-300 max-w-sm w-full min-w-xs">
     <div class="card-body">
       <h2 class="card-title uppercase">Public Files</h2>
       <fieldset class="fieldset">
@@ -228,7 +228,7 @@
         <a href="/cargo" class="btn btn-accent w-auto">Search</a>
       </div>
     </div>
-  </div>
+  </div> -->
 </div>
 
 {#if loading}
