@@ -8,19 +8,25 @@
 
   let { data } = $props()
   let connect = $state(false) 
+  let loading = $state(false)
 
   function copyFlare(){
     navigator.clipboard.writeText(data.bridge.flare)
     addToast({ message: 'Flare successfully copied to clipboard', type: 'success', auto: true })
   }
 
-  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full' });
+  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium' });
   const timeFormatter = new Intl.DateTimeFormat('en-ZA', { timeStyle: 'short' });
 
   onDestroy(() => { cleanupToasts() })
 </script>
 
-<div class="flex flex-col justify-items-start items-center p-4">
+<svelte:head>
+  <title>Elela - Bridge</title>
+	<meta name="description" content="An anonymous private bridge meeting." />
+</svelte:head>
+
+<div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-md w-full min-w-xs">
     {#if connect ===  false}
       <section class="card-body">
@@ -73,7 +79,6 @@
           </ul>
         {/if}
         <div class="card-actions">
-          <a href="/canal/bridges" class="btn btn-outline flex-1">Back</a>
           <button onclick={copyFlare} type="button" class="btn btn-accent flex-1">Share</button>
           {#if data.bridge.connections < 1}
             <button onclick={() => { connect = true }} type="button" class="btn btn-primary flex-1">Connect</button>
@@ -82,6 +87,7 @@
       </section>
     {:else}
       <form class="card-body" action="?/connect" method="POST" use:enhance={({formData}) => {
+        loading = true
         return async ({result, update}) => {
           if(result.data?.posterror){ 
             addToast({ message: result.data.posterror, type: 'error', auto: true }) 
@@ -90,28 +96,37 @@
             connect = false
           }
           await update()
+          loading = false
         }
       }}>
         <h1 class="card-title">Connect</h1>
         <fieldset class="fieldset">
           <label for="counterflare" class="label">Response Flare</label>
-          <input name="counterflare" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
+          <input name="counterflare" autocomplete="off" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
           <div role="alert" class="alert alert-soft alert-info">
             <Info />
             <span>This is the response flare that you want to establish connection with</span>
           </div>
         </fieldset>
         <div class="card-actions">
+          <button type="button" onclick={() => connect = false} class="btn btn-outline">Cancel</button>
           <button type="submit" class="btn btn-accent flex-1">Approve</button>
         </div>
       </form>
     {/if}
   </div>
 </div>
-<div class="toast toast-bottom toast-center">
+<div class="toast toast-top toast-center">
   {#each toasts as toast (toast.id) }
     <div class={`alert alert-${toast.type}`}>
       <span>{toast.message}</span>
     </div>
   {/each}
 </div>
+{#if loading}
+  <div class="toast toast-top toast-center">
+    <div class={`btn btn-primary btn-circle`}>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </div>
+{/if}

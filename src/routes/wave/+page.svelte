@@ -5,8 +5,14 @@
   import { toasts } from '$lib/toasts.svelte.js'
   import { onDestroy } from 'svelte'
   import { addToCalendar } from '$lib/event'
+  import { encodeHex } from '@std/encoding'
+  import { argon2id } from 'hash-wasm'
+  import { PUBLIC_SERVER } from '$env/static/public'
+  import { generateWaveKeyPair, hashAuthenticationPass, hashEncryptionPass } from '$lib/encryption'
 
   let wave = $state(null)
+  let loading = $state(false)
+  let passphrase = $state('')
 
   function copyFlare(){
     navigator.clipboard.writeText(wave.counterflare)
@@ -21,21 +27,44 @@
     description: `Their flare was '${wave.flare}' and you replied with '${wave.counterflare}', visit app.elela.online/bridge to join the chat or check to if you have been accepted.`
   }) }
 
-  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full' });
+  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium' });
   const timeFormatter = new Intl.DateTimeFormat('en-ZA', { timeStyle: 'short' });
 
   onDestroy(() => {cleanupToasts()})
 </script>
 
-<div class="flex flex-col justify-items-start items-center p-4">
+<svelte:head>
+  <title>Elela - Response Flare</title>
+	<meta name="description" content="Request to join a scheduled bridge meeting." />
+</svelte:head>
+
+<div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
-    <form class="card-body" method="POST" action="?/wave" use:enhance={({formData}) => {
+    <form class="card-body" method="POST" action="?/wave" use:enhance={async ({formData, cancel}) => {
+      loading = true
+      if(passphrase.length < 10){
+        addToast({ message: 'The anchor must be at least 10 characters long', type: 'error', auto: true }) 
+        cancel()
+        loading = false
+      } else { 
+        const salt = crypto.getRandomValues(new Uint8Array(16))
+        const hash_auth = await hashAuthenticationPass(passphrase, salt)
+        formData.append('passphrase_hash', hash_auth)
+        formData.append('passphrase_salt', encodeHex(salt))
+
+        const hash_encrypt = await hashEncryptionPass(passphrase, salt)
+        const gen_salt = encodeHex(crypto.getRandomValues(new Uint8Array(16)))
+        const pair = generateWaveKeyPair(hash_encrypt, gen_salt)
+        formData.append('public_key', encodeHex(pair.publicKey))
+        formData.append('regeneration_salt', gen_salt)
+      }
+
       return async ({result, update}) => {
-        console.log(result)
         if(result.data?.posterror){ 
           addToast({ message: result.data.posterror, type: 'error', auto: true }) 
         }
         wave = result.data?.wave
+        loading = false
         await update()
       }
     }}>
@@ -79,19 +108,19 @@
         <fieldset class="fieldset">
           <label for="flare" class="fieldset-legend">Flare</label>
           <span class="label">The initial phrase as exposed to you by a sailor</span>
-          <input id="flare" name="flare" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
+          <input id="flare" autocomplete="off" name="flare" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
           <div class="divider"></div>
           <label for="counterflare" class="fieldset-legend">Response Flare</label>
           <span class="label">A two word reply phrase of at least 4 letters each</span>
-          <input id="counterflare" name="counterflare" type="text" class="input w-full" placeholder="calmly breathe" />
+          <input id="counterflare" autocomplete="off" name="counterflare" type="text" class="input w-full" placeholder="calmly breathe" />
           <div role="alert" class="alert alert-soft alert-info">
             <Info />
             <span>The phrase will form a part of the counterflare which you must show to the creator of the flare</span>
           </div>
           <div class="divider"></div>
           <label for="passphrase" class="fieldset-legend">Anchor</label>
-          <p class="label">A private passphrase you will need to join a bridge chat</p>
-          <input id="passphrase" name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
+          <span class="label text-wrap">A private passphrase you will need to join a bridge chat</span>
+          <input autocomplete="off" id="passphrase" bind:value={passphrase} type="password" class="input w-full" placeholder="Passphrase" />
           <div role="alert" class="alert alert-soft alert-info">
             <Info />
             <span>Never share the passphrase with anyone, treat it like your password and do not forget it</span>
@@ -104,10 +133,17 @@
     </form>
   </div>
 </div>
-<div class="toast toast-bottom toast-center">
+<div class="toast toast-top toast-center">
   {#each toasts as toast (toast.id) }
     <div class={`alert alert-${toast.type}`}>
       <span>{toast.message}</span>
     </div>
   {/each}
 </div>
+{#if loading}
+  <div class="toast toast-top toast-center">
+    <div class={`btn btn-primary btn-circle`}>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </div>
+{/if}

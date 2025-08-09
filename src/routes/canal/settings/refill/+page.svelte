@@ -48,13 +48,20 @@
   function closeFiatModal(){ fiatModal.close() }
 </script>
 
-<section class="card bg-base-200 min-h-[70vh] w-full">
-  <div class="card-body">
+<section class="card bg-base-300 min-h-[calc(100vh-19.829rem)] sm:min-h-[calc(100vh-8.829rem)] w-full">
+  <div class="card-body max-w-lg">
     <h2 class="card-title">Refill</h2>
-    <div role="alert" class="alert alert-soft alert-info">
-      <Info />
-      <span>For crypto currency we accept Avalanche & for fiat currency we accept South African rand.</span>
-    </div>
+    {#if !data.canal.usage.is_premium }
+      <div role="alert" class="alert alert-warning alert-soft">
+        <Info />
+        <span>This feature is for premium canals, <a class="link" href="/generate/buy">get yours</a>.</span>
+      </div>
+    {:else}
+      <div role="alert" class="alert alert-soft alert-info">
+        <Info />
+        <span>For crypto currency we accept Avalanche & for fiat currency we accept South African rand.</span>
+      </div>
+    {/if}
     <fieldset class="fieldset">
       <input id="drops" name="quantity" type="range" min="10" max="1000" bind:value={quantity} class="range w-full" />
     </fieldset>

@@ -6,16 +6,47 @@
   import { Info, Calendar, Clock } from '@lucide/svelte'
   import { browser } from '$app/environment'
   import { getCookie } from '$lib/cookie'
-    import { invalidateAll } from '$app/navigation';
+  import { invalidateAll } from '$app/navigation'
+  import { argon2id } from 'hash-wasm'
+  import { decodeHex } from '@std/encoding'
+  import { PUBLIC_SERVER } from '$env/static/public'
+  import database from '$lib/surrealdb'
+  import { hashAuthenticationPass, hashEncryptionPass } from '$lib/encryption.js'
+  import { RecordId } from "surrealdb"
 
   let { data } = $props()
 
   let queried = $state(false)
   let bridge = $state(null)
   let session = $state(null)
+  let loading = $state(false)
 
-  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full' });
+  let counterflare = $state('')
+  let flare = $state('')
+  let passphrase = $state('')
+
+  let salt = $state(null)
+
+  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium' });
   const timeFormatter = new Intl.DateTimeFormat('en-ZA', { timeStyle: 'short' });
+
+  async function getSalt(){
+    loading = true
+    const res = await fetch(`${PUBLIC_SERVER}/canal/wave/salt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ counterflare, flare })
+    })
+
+    if(!res.ok){  
+      loading = false
+      addToast({ message: await res.text(), type: 'error', auto: true }) 
+    } else {
+      const wave = await res.json()
+      salt = wave.secret_salt
+      loading = false
+    }
+  }
 
   onMount(() => {
     if(data?.bridge){ 
@@ -27,7 +58,12 @@
   onDestroy(() => { cleanupToasts() })
 </script>
 
-<div class="flex flex-col justify-items-start items-center p-4">
+<svelte:head>
+  <title>Elela - Join a Bridge</title>
+	<meta name="description" content="Join an anonymous bridge meeting." />
+</svelte:head>
+
+<div class="flex flex-col justify-items-start items-center">
   <div class="card card-border bg-base-300 max-w-sm w-full min-w-xs">
     {#if data?.bridge}
       <section class="card-body">
@@ -73,6 +109,7 @@
         {/if}
         {#if data.bridge.approved}
           <form method="POST" action="?/logout" class="card-actions" use:enhance={({formData}) => {
+            loading = true
             return async ({result, update}) => {
               if(result.data?.posterror){ 
                 addToast({ message: result.data.posterror, type: 'error', auto: true }) 
@@ -82,6 +119,7 @@
                 bridge = null
               }
               await update()
+              loading = false
             }
           }}>
             <button type="submit" class="btn btn-outline">Logout</button>
@@ -135,6 +173,7 @@
         {/if}
         {#if bridge.approved}
           <form method="POST" action="?/logout" class="card-actions" use:enhance={({formData}) => {
+            loading = true
             return async ({result, update}) => {
               if(result.data?.posterror){ 
                 addToast({ message: result.data.posterror, type: 'error', auto: true }) 
@@ -144,6 +183,7 @@
                 bridge = null
               }
               await update()
+              loading = false
             }
           }}>
             <button type="submit" class="btn btn-outline">Logout</button>
@@ -154,20 +194,44 @@
         {/if}
       </section>
     {:else}
-      <form method="POST" action="?/auth" class="card-body" use:enhance={({formData}) => {
+      <form method="POST" action="?/auth" class="card-body" use:enhance={async ({formData}) => {
+        loading = true
+        if(!salt || passphrase.length < 1){
+          addToast({ message: 'The anchor must be at least 10 characters long', type: 'error', auto: true }) 
+          cancel()
+          loading = false
+        } else { 
+          const hash_auth = await hashAuthenticationPass(passphrase, decodeHex(salt))
+          formData.append('passphrase', hash_auth)
+          formData.append('flare', flare)
+          formData.append('counterflare', counterflare)
+
+          const hash_encrypt = await hashEncryptionPass(passphrase, decodeHex(salt))
+          const db = await database()
+          await db.upsert(new RecordId('crypto', 'wave'), {key: hash_encrypt}).catch(err => {
+            addToast({ message: 'Failed to save encryption keys', type: 'error', auto: true }) 
+            cancel()
+            loading = false
+          })
+        }
         return async ({result, update}) => {
-          console.log(result)
           if(result.data?.posterror){ 
+            const db = await database()
+            await db.delete(new RecordId('crypto', 'wave'))
             addToast({ message: result.data.posterror, type: 'error', auto: true }) 
           }
           if(result.data?.bridge){
             queried = true
             bridge = result.data?.bridge
+          } else {
+            const db = await database()
+            await db.delete(new RecordId('crypto', 'wave'))
           }
           await update()
+          loading = false
         }
       }} >
-        <h1 class="card-title">Bridge Chat</h1>
+        <h1 class="card-title">Bridge meeting</h1>
         <div role="alert" class="alert alert-soft alert-warning">
           <Info />
           <span>You must have already replied to a flare with a <a href="/wave" class="link">response flare</a></span>
@@ -177,24 +241,38 @@
           <span>This feature can also be used to check if your reply has been accepted</span>
         </div>
         <fieldset class="fieldset">
-            <label for="flare" class="label">Flare</label>
-            <input name="flare" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
-            <label for="counterflare" class="label">Response Flare</label>
-            <input name="counterflare" type="text" class="input w-full" placeholder="😮 calmly breathe 👨🏽🧘🏽‍♀️" />
+          {#if salt}
             <label for="passphrase" class="label">Anchor</label>
-            <input name="passphrase" type="password" class="input w-full" placeholder="Passphrase" />
+            <input bind:value={passphrase} autocomplete="off" type="password" class="input w-full" placeholder="Passphrase" />
+          {:else}
+            <label for="flare" class="label">Flare</label>
+            <input id="flare" bind:value={flare} autocomplete="off" type="text" class="input w-full" placeholder="😎 worries aplenty 👨🏽‍🍳🥰" />
+            <label for="counterflare" class="label">Response Flare</label>
+            <input id="counterflare" bind:value={counterflare} autocomplete="off" type="text" class="input w-full" placeholder="😮👨🏽 calmly breathe 🧘🏽‍♀️" />
+          {/if}
         </fieldset>
-        <div class="card-actions flex-col">
-          <button class="btn btn-primary mt-4 w-full">Join</button>
+        <div class="card-actions justify-end">
+          {#if salt}
+            <button disabled={loading} class={`btn btn-primary mt-4 w-full`} type="submit">Join</button>
+          {:else}
+            <button onclick={getSalt} disabled={loading} class={`btn btn-primary mt-4`} type="button">Continue</button>
+          {/if}
         </div>
       </form>
     {/if}
   </div>
 </div>
-<div class="toast toast-bottom toast-center">
+<div class="toast toast-top toast-center">
   {#each toasts as toast (toast.id) }
     <div class={`alert alert-${toast.type}`}>
       <span>{toast.message}</span>
     </div>
   {/each}
 </div>
+{#if loading}
+  <div class="toast toast-top toast-center">
+    <div class={`btn btn-primary btn-circle`}>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </div>
+{/if}

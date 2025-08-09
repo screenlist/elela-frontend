@@ -33,6 +33,8 @@ export const actions = {
     const flare = values.flare
     const date = values.date
     const time = values.time
+    const public_key = values.public_key
+    const regeneration_salt = values.regeneration_salt
 
     if(!date || !time){ return fail(400, { posterror: 'Please fill in both the date and time' }) }
 
@@ -46,7 +48,9 @@ export const actions = {
         },
         body: JSON.stringify({
           flare: flare,
-          start_time: start
+          start_time: start,
+          public_key: public_key,
+          regeneration_salt: regeneration_salt
         })
       }
     )

@@ -4,10 +4,18 @@
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
   import { onDestroy } from 'svelte'
+  import database from "$lib/surrealdb";
+  import { generateBridgeKeyPair } from "$lib/encryption.js"
+  import { encodeHex } from "@std/encoding"
+  import { RecordId } from "surrealdb"
 
   let { data } = $props()
   
   let bridge = $state(null)
+  let loading = $state(false)
+  let date = $state(new Date(Date.now() + 1000*60*5))
+  let date_string = $derived(date.toISOString().split('T')[0])
+  let time_string = $derived(`${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`)
 
   function copyFlare(){
     navigator.clipboard.writeText(bridge.public_code)
@@ -16,17 +24,31 @@
 
   onDestroy(() => {cleanupToasts()})
 </script>
+
+<svelte:head>
+  <title>Elela - Bridges</title>
+	<meta name="description" content="Anonymous scheduled Bridge meetings." />
+</svelte:head>
   
-<div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
+<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
   <div class="card card-border card-sm bg-base-300 w-full sm:w-1/2 md:w-2/5 lg:w-1/3 xl:w-1/4">
-    <form id="new" class="card-body justify-between" method="POST" action="?/bridge" use:enhance={({formData}) => {
+    <form id="new" class="card-body justify-between" method="POST" action="?/bridge" use:enhance={async ({formData}) => {
+      loading = true
+
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+      const gen_salt =  encodeHex(crypto.getRandomValues(new Uint8Array(16)))
+      const pair = generateBridgeKeyPair(encoded_key.key, gen_salt)
+      formData.append('public_key', encodeHex(pair.publicKey))
+      formData.append('regeneration_salt', gen_salt)
+
       return async ({result, update}) => {
-        console.log(result)
         if(result.data?.posterror){ 
           addToast({ message: result.data.posterror, type: 'error', auto: true }) 
         }
         bridge = result.data?.new_bridge
         await update()
+        loading = false
       }
     }}>
       {#if bridge}
@@ -45,13 +67,13 @@
         <fieldset class="fieldset">
           <label for="flare" class="fieldset-legend">Flare</label>
           <span class="label">A two word phrase of at least 4 letters each</span>
-          <input name="flare" type="text" class="input w-full" placeholder="worries aplenty" />
+          <input id="flare" name="flare" autocomplete="off" type="text" class="input w-full" placeholder="worries aplenty" />
           <div class="divider"></div>
           <p class="fieldset-legend">Schedule</p>
           <label for="date" class="label">Date</label>
-          <input id="date" name="date" type="date" class="input w-full" />
+          <input id="date" name="date" bind:value={date_string} type="date" class="input w-full" />
           <label for="time" class="label">Time</label>
-          <input id="time" name="time" type="time" class="input w-full" />
+          <input id="time" name="time" bind:value={time_string} type="time" class="input w-full" />
         </fieldset>
         <div class="card-actions justify-end">
           <button type="submit" class="btn btn-neutral uppercase w-1/2">Create</button>
@@ -59,7 +81,7 @@
       {/if}
     </form>
   </div>
-  <div class="flex flex-col gap-4 w-full sm:flex-1 xl:flex-row">
+  <div class="flex flex-col gap-4 w-full min-h-[calc(100vh-8.829rem)] sm:flex-1 xl:flex-row">
     <section id="active" class="card card-sm card-border bg-base-300 xl:flex-1">
       <div class="card-body">
         <h3 class="card-title">Active</h3>
@@ -112,7 +134,7 @@
     </section>
   </div>
 </div>
-<div class="toast toast-bottom toast-center">
+<div class="toast toast-top toast-center">
   {#each toasts as toast (toast.id) }
     <div class={`alert alert-${toast.type}`}>
       <span>{toast.message}</span>

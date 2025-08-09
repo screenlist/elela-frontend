@@ -1,5 +1,10 @@
-<div class="flex flex-col justify-baseline items-center sm:flex-row sm:items-stretch sm:justify-center">
-  <div class="card mt-4 sm:m-4 max-w-sm w-1/2 min-w-xs bg-base-300 shadow-sm">
+<svelte:head>
+  <title>Elela - Generate Canal</title>
+	<meta name="description" content="Generate a new Canal for free." />
+</svelte:head>
+
+<div class="flex flex-col gap-4 justify-baseline items-center sm:flex-row sm:items-stretch sm:justify-center">
+  <div class="card max-w-sm w-full flex-1 bg-base-300 shadow-sm">
     <section class="card-body sm:justify-between">
       <div class="flex justify-between">
         <h2 class="text-3xl font-bold">Free</h2>
@@ -27,7 +32,7 @@
       </div>
     </section>
   </div>
-  <div class="card mt-4 sm:m-4 max-w-sm w-1/2 min-w-xs bg-base-300 shadow-sm">
+  <div class="card max-w-sm w-full flex-1 bg-base-300 shadow-sm">
     <section class="card-body sm:justify-between">
       <div class="flex justify-between">
         <h2 class="text-3xl font-bold">Premium</h2>

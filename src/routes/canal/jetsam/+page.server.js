@@ -3,13 +3,19 @@ import { PUBLIC_SERVER } from '$env/static/public'
 
 export async function load({ cookies, url, request, depends }){
   const token = cookies.get('access_token')
-
+  
   const upcoming = await fetch(`${PUBLIC_SERVER}/jetsam/unfinished`, {
     method: 'GET',
     headers: { 'Authorization': `Bearer ${token}` }
   })
-
-  const active = await fetch(`${PUBLIC_SERVER}/jetsam`, {
+  const page = url.searchParams.get('page')
+  const limit = url.searchParams.get('limit')
+  let jetsam_url = `${PUBLIC_SERVER}/jetsam?`
+  const params = []
+  if (page) params.push(`page=${page}`)
+  if (limit) params.push(`limit=${limit}`)
+  if (params.length) jetsam_url += '?' + params.join('&')
+  const active = await fetch(jetsam_url, {
     method: 'GET',
     headers: { 'Authorization': `Bearer ${token}` }
   })

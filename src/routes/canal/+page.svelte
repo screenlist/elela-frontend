@@ -1,9 +1,9 @@
 <script>
   import { goto } from '$app/navigation'
-  import { setupSessionTimers, clearSessionTimers } from '$lib/session'
+  import { clearSessionTimers } from '$lib/session'
   import { session } from '$lib/expiry.svelte'
   import { Clock, Lock, LockOpen, MessageCircle, Info } from '@lucide/svelte';
-    import size from '$lib/size.js';
+  import size from '$lib/size.js';
 
   let { data } = $props()
   async function onExit(){
@@ -12,17 +12,21 @@
     session.expiry = null
     clearSessionTimers()
   }
-  console.log(data.jetsam)
 </script>
 
-<div class="grid auto-rows-auto grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-4">
+<svelte:head>
+  <title>Elela - Canal</title>
+	<meta name="description" content="Your private home on the internet." />
+</svelte:head>
+
+<div class="grid auto-rows-auto grid-cols-1 gap-4 overflow-y-auto h-[calc(100vh-8.829rem)] scrollbar-hide sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
   <div class="card card-border card-sm bg-base-300 w-full h-full">
     <section class="card-body justify-between">
       <h2 class="card-title uppercase">Canal <span class="text-primary">{data.canal.usage.letter_sequence}</span></h2>
       <div class="flex flex-row gap-4 mt-2 mb-2">
         <div class="badge badge-neutral">{data.canal.usage.is_premium ? 'Premium' : 'Free'}</div>
         {#if data.canal.usage.is_premium}
-          <div class={`badge ${data.canal.usage.totp_enabled ? 'badge-success' : 'badge-warning'}`}>
+          <div class={`badge flex-1 ${data.canal.usage.totp_enabled ? 'badge-success' : 'badge-warning'}`}>
             {#if data.canal.usage.totp_enabled}
               <Lock size={18}/>
             {:else}
@@ -31,7 +35,7 @@
             {data.canal.usage.totp_enabled ? 'Access Secured' : 'Access Not Secured'}
           </div>
         {:else}
-          <div class={`badge badge-warning`}>
+          <div class={`badge flex-1 badge-warning`}>
             <Clock size={18}/>
             {`${new Date( new Date(data.canal.usage.created_at).valueOf() + 1000*60*60*24*3 ).toLocaleDateString('en-ZA', { hour: 'numeric', minute: 'numeric', second: 'numeric' })}`}
           </div>
@@ -171,7 +175,7 @@
         </div>
         <div class="flex flex-row w-full">
           <p class="flex-1">Cost</p>
-          <span class="flex-1">{(data.jetsam.total_subpoints/100).toFixed(2)}</span>
+          <span class="flex-1">{(data.jetsam.total_subpoints/100).toFixed(2)} Drops</span>
         </div>
       </div>
       <div class="card-actions justify-end">

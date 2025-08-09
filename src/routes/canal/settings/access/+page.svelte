@@ -5,11 +5,14 @@
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
   import { onDestroy } from 'svelte'
+
   let { data, form } = $props()
+
   let setup = $state(false)
   let token = $state(null)
   let secret =$state(null)
   let uri = $state(null)
+  let loading = $state(false)
 
   let qrUrl = $state('')
 
@@ -22,27 +25,28 @@
   })
   
   onDestroy(() => { cleanupToasts() })
-  // $inspect(data, form).with(console.log)
 </script>
 
-<section class="card bg-base-200 min-h-[70vh] w-full">
-  <div class="card-body">
+<section class="card bg-base-300 min-h-[calc(100vh-19.829rem)] sm:min-h-[calc(100vh-8.829rem)] w-full">
+  <div class="card-body max-w-lg">
     <h2 class="card-title">Secure Access</h2>
     <span class="opacity-50">Manage multi-factor authentication to secure your canal</span>
     {#if data.canal.usage.totp_enabled && !setup}
       <form method="POST" action="?/disable" use:enhance={({formData}) => {
+        loading = true
         if(token){ formData.append('auth_token', token) }
         return async ({result, update}) => {
           if(result.data?.autherror){ 
             addToast({ message: result.data.autherror, type: 'error', auto: true }) 
           }
           await update()
+          loading = false
         }
       }}>
         <p class="alert alert-soft alert-success mb-4"><Info/>Your secure access is enabled, you need to use your authenticator app to enter the canal.</p>
         <fieldset class="fieldset">
           <legend class="fieldset-legend">Code</legend>
-          <input name="totp_token" type="text" class="input" placeholder="Enter code" />
+          <input name="totp_token" autocomplete="off" type="text" class="input" placeholder="Enter code" />
         </fieldset>
         <div class="card-actions">
           <button class="btn btn-neutral">Disable</button>
@@ -50,8 +54,8 @@
       </form>
     {:else if !data.canal.usage.totp_enabled && !setup}
       <form method="POST" action="?/setup" use:enhance={() => {
+        loading = true
         return async ({result, update}) => {
-          console.log(result)
           if(result.data?.autherror){ 
             addToast({ message: result.data.autherror, type: 'error', auto: true }) 
           } else {
@@ -61,16 +65,25 @@
             setup = true
           }
           await update()
+          loading = false
         }
       }}>
-        <p class="alert alert-soft alert-info mb-4"><Info/>After initiating the setup do not refresh the page until you have enabled secure access, otherwise you will need to wait at least 3 minutes before you can restart.</p>
-        <div class="card-actions">
+        {#if !data.canal.usage.is_premium }
+          <div role="alert" class="alert alert-warning alert-soft">
+            <Info />
+            <span>This feature is for premium canals, <a class="link" href="/generate/buy">get yours</a>.</span>
+          </div>
+        {:else}
+          <p class="alert alert-soft alert-info mb-4">After initiating the setup do not refresh the page until you have enabled secure access.</p>
+        {/if}
+        <div class="card-actions mt-4">
           <button class="btn btn-neutral">Setup</button>
         </div>
       </form>
     {/if}
     {#if !data.canal.usage.topt_enabled && setup}
       <form method="POST" action="?/enable" use:enhance={({formData}) => {
+        loading = true
         if(token){ formData.append('auth_token', token) }
         return async ({result, update}) => {
           if(result.data?.autherror){ 
@@ -82,6 +95,7 @@
             setup = false
           }
           await update()
+          loading = false
         }
       }}>
         {#if qrUrl}
@@ -91,19 +105,26 @@
         <span class="badge badge-neutral">{secret}</span>
         <fieldset class="fieldset">
           <legend class="fieldset-legend">Code</legend>
-          <input name="totp_token" type="text" class="input" placeholder="Enter code" />
+          <input name="totp_token" autocomplete="off" type="text" class="input" placeholder="Enter code" />
         </fieldset>
-        <div class="card-actions">
+        <div class="card-actions mt-4">
           <button class="btn btn-neutral">Enable</button>
         </div>
       </form>
     {/if}
   </div>
 </section>
-<div class="toast toast-bottom toast-center">
+<div class="toast toast-top toast-center">
   {#each toasts as toast (toast.id) }
     <div class={`alert alert-${toast.type}`}>
       <span>{toast.message}</span>
     </div>
   {/each}
 </div>
+{#if loading}
+  <div class="toast toast-top toast-center">
+    <div class={`btn btn-primary btn-circle`}>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </div>
+{/if}

@@ -1,5 +1,5 @@
 <script>
-  import { CirclePlus, Download, Eye, Info, MessageCircle, Phone, Trash2, CircleX } from "@lucide/svelte";
+  import { CirclePlus, Download, Eye, Info, MessageCircle, Phone, Trash2, CircleX, ChevronLeft, ChevronRight } from "@lucide/svelte"
   import { enhance } from '$app/forms'
   import { addToast, cleanupToasts, dismissToast } from '$lib/toasts'
   import { toasts } from '$lib/toasts.svelte.js'
@@ -8,9 +8,13 @@
   import Icon from "$lib/Icon.svelte"
   import extend_session from "$lib/extend_session"
   import { sha1 } from "hash-wasm"
-  import { invalidate } from "$app/navigation"
+  import { goto, invalidate } from "$app/navigation"
   import { page } from "$app/state"
   import size from "$lib/size"
+  import database from "$lib/surrealdb"
+  import { encryptFile, decryptFile, encryptFileChunk, deriveFileKey } from '$lib/encryption.js'
+  import { RecordId } from "surrealdb"
+  import { decodeHex } from "@std/encoding"
 
   let { data } = $props()
 
@@ -22,7 +26,10 @@
     type: '',
     size: 0,
     is_public: false,
-    id: ''
+    id: '',
+    created_at: '',
+    expires_at: '',
+    updated_at: ''
   })
   let cargo_loading = $state(false)
   
@@ -38,6 +45,10 @@
   let large_progress = $state(0)
   let uploading = $state(false)
 
+  let iframe_timeout
+
+  const dateFormatter = new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
+
   function resetCargoInfo(){
     cargo_info = {
       name: '',
@@ -46,7 +57,10 @@
       type: '',
       size: 0,
       is_public: false,
-      id: ''
+      id: '',
+      created_at: '',
+      expires_at: '',
+      updated_at: ''
     }
   }
 
@@ -104,13 +118,19 @@
     loading = true
     uploading = true
 
-    const hash = await sha1(new Uint8Array(await file.arrayBuffer()))
     const name = file.name
     const type = file.type
     const size = file.size
 
     if(size < is_big_size){
-      console.log(hash)
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+      const encryption_key = await deriveFileKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+      const converted_file = new Uint8Array(await file.arrayBuffer())
+      const encrypted_file = await encryptFile(converted_file, encryption_key)
+
+      const hash = await sha1(encrypted_file)
+
       const response = await fetch(`${PUBLIC_SERVER}/jetsam/small/start`,
         {
           method: 'POST',
@@ -119,7 +139,7 @@
             sha1: hash, 
             type: type, 
             name: name, 
-            size: size,
+            size: size+16, // account for the 16 byte iv
             downloads: downloads,
             retention: retention
           })
@@ -131,17 +151,19 @@
         uploading = false
         return
       }
+
       const info = await response.json()
+
       const upload = await fetch(info.url, {
         method: 'POST',
         headers: { 
           'Authorization': info.token,
           'X-Bz-File-Name': info.name,
-          'Content-Type': info.type,
+          'Content-Type': 'application/octet-stream',
           'Content-Length': info.size,
           'X-Bz-Content-Sha1': info.sha1
         },
-        body: file
+        body: encrypted_file
       })
       if(!upload.ok){ 
         addToast({ message: await upload.text(), type: 'error', auto: true })
@@ -166,26 +188,32 @@
       uploading = false
       input_file = null
       total_costs = 0
-      downloads = 0
-      retention = 0
+      downloads = 3
+      retention = 1
       await invalidate('get:jetsam')
     } else {
 
       const chunk_size = 6 * ( 1024 ** 2 )
       const total_chunks = Math.ceil(size / chunk_size)
       const chunks = []
+      
+      const nonce = crypto.getRandomValues(new Uint8Array(12))
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+      const encryption_key = await deriveFileKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
 
       for (let i = 0; i < total_chunks; i++){
         const start = i * chunk_size
         const end = Math.min(start + chunk_size, size)
         const chunk = await file.slice(start, end).arrayBuffer()
-        const chunk_hash = await sha1(new Uint8Array(chunk))
+        const encrypted_chunk = await encryptFileChunk(chunk, encryption_key, nonce, start)
+        const chunk_hash = await sha1(encrypted_chunk)
         const chunk_size_current = chunk.byteLength
         chunks.push({
           index: 1+i,
           sha1: chunk_hash,
           size: chunk_size_current,
-          slice: chunk
+          slice: encrypted_chunk
         })
       }
 
@@ -194,10 +222,9 @@
           method: 'POST',
           credentials: 'include',
           body: JSON.stringify({
-            sha1: hash, 
             type: type, 
             name: name, 
-            size: size,
+            size: size+(16*chunks.length), // account for the 16 byte iv
             downloads: downloads,
             retention: retention,
             chunks: total_chunks
@@ -277,13 +304,42 @@
       uploading = false
       input_file = null
       total_costs = 0
-      downloads = 0
-      retention = 0
+      downloads = 3
+      retention = 1
       await invalidate('get:jetsam')
     }
   }
 
   async function downloadCargo(){
+    const is_big_size = 9 * ( 1024 ** 2 )
+    if(cargo_info.size >= is_big_size){
+      prepareLargeDownload()
+    } else {
+      downloadSmallCargo()
+    }
+  }
+
+  async function prepareLargeDownload(){
+    loading = true
+
+    const db = await database()
+    const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+    const decryption_key = await deriveFileKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+
+    globalThis.decryption_keys = globalThis.decryption_keys || {}
+    globalThis.decryption_keys['canal'] = decryption_key
+
+    const iframe = document.createElement('iframe')
+    iframe.style.display = 'none'
+    iframe.src = `/canal/jetsam/download?url=${encodeURIComponent(`${PUBLIC_SERVER}/jetsam/cargo/${cargo_info.id.split(':')[1]}`)}`
+    document.body.appendChild(iframe)
+    iframe_timeout = setTimeout(() => iframe.remove(), 60000)
+
+    addToast({ message: 'Download starting now...', type: 'success', auto: true })
+    loading = false
+  }
+
+  async function downloadSmallCargo(){
     cargo_loading = true
     const res = await fetch(`${PUBLIC_SERVER}/jetsam/cargo/${cargo_info.id.split(':')[1]}/download`, {
       method: 'GET',
@@ -293,14 +349,20 @@
       cargo_loading = false
       addToast({ message: await res.text(), type: 'error', auto: true })
     } else {
-      await invalidate('get:jetsam')
-      addToast({ message: 'Download starting now...', type: 'success', auto: true })
-      cargo_loading = false
+      const db = await database()
+      const encoded_key = await db.select(new RecordId('crypto', 'canal'))
+      const decryption_key = await deriveFileKey(decodeHex(encoded_key.key), data.canal.letter_sequence)
+      const decrypted_file = await decryptFile(await res.arrayBuffer(), decryption_key)
+      const blob = new Blob([decrypted_file], { type: cargo_info.type })
       const a = Object.assign(document.createElement('a'), {
-        href: URL.createObjectURL(await res.blob()),
+        href: URL.createObjectURL(blob),
         download: cargo_info.name
       })
       a.click()
+
+      await invalidate('get:jetsam')
+      addToast({ message: 'Download starting now...', type: 'success', auto: true })
+      cargo_loading = false
     }
   }
   
@@ -332,20 +394,40 @@
   })
 
   $effect(() => {
-    if(data.active){
+    if(data.active.results){
       if(cargo_info.id.length > 0){
-        const new_cargo = data.active.find(val => val.id === cargo_info.id)
-        cargo_info.downloads_left = new_cargo.downloads_total - new_cargo.downloads_count
+        const new_cargo = data.active.results.find(val => val.id === cargo_info.id)
+        if(new_cargo){
+          cargo_info.downloads_left = new_cargo.downloads_total - new_cargo.downloads_count
+        }
       }
     }
   })
 
-  onDestroy(() => {cleanupToasts()})
+  onMount(() => {
+    navigator.serviceWorker?.addEventListener('message', (event) => {
+      if (event.data.type === 'KEY_REQUEST') {
+        const key = globalThis.decryption_keys?.[event.data.key_id];
+        if (key) {
+          event.data.port.postMessage({ key });
+          delete globalThis.decryption_keys[event.data.key_id];
+        }
+      }
+    })
+  })
 
-  $inspect(cargo_info).with(console.log)
+  onDestroy(() => {
+    cleanupToasts()
+    clearTimeout(iframe_timeout)
+  })
 </script>
 
-<div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
+<svelte:head>
+  <title>Elela - Cargo</title>
+	<meta name="description" content="Store your files anonymously." />
+</svelte:head>
+
+<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
   <div class="card card-border card-sm bg-base-300 w-full sm:w-1/2 md:w-2/5 lg:w-1/3 xl:w-1/4">
     <section class="card-body justify-between">
       <h2 class="card-title">{uploading ? 'Uploading' : 'Upload'}</h2>
@@ -366,6 +448,12 @@
           <div role="alert" class="alert alert-warning alert-soft">
             <Info />
             <span>This action will cost more drops than available in your canal, <a class="link" href="/canal/settings/refill">please refill</a>.</span>
+          </div>
+        {/if}
+        {#if !data.canal.usage.is_premium }
+          <div role="alert" class="alert alert-warning alert-soft">
+            <Info />
+            <span>This feature is for premium canals, <a class="link" href="/generate/buy">get yours</a>.</span>
           </div>
         {/if}
         {#if loading}
@@ -392,8 +480,8 @@
           <label for="flare" class="fieldset-legend">Downloads</label>
           <input disabled={!input_file || input_file.length === 0} id="drops" name="quantity" type="range" min="3" max="100" bind:value={downloads} class="range w-full" />
           <div class="flex">
-            <button onclick={() => downloads - 100 >= 3 ? downloads -= 100 : downloads = downloads} type="button" class="btn btn-ghost uppercase flex-1">- 100</button>
-            <button onclick={() => downloads += 100} type="button" class="btn btn-ghost uppercase flex-1">+ 100</button>
+            <button disabled={!input_file || input_file.length === 0} onclick={() => downloads - 100 >= 3 ? downloads -= 100 : downloads = downloads} type="button" class="btn btn-sm btn-ghost uppercase flex-1">- 100</button>
+            <button disabled={!input_file || input_file.length === 0} onclick={() => downloads += 100} type="button" class="btn btn-sm btn-ghost uppercase flex-1">+ 100</button>
           </div>
           <span class="label">{downloads} downloads</span>
         </fieldset>
@@ -403,25 +491,35 @@
       {/if}
     </section>
   </div>
-  <div class="flex flex-col gap-4 w-full sm:flex-1 xl:flex-row">
-    <section id="active" class="card card-sm card-border h-[calc(100vh-2rem)] sm:h-[calc(100vh-18.75rem)] xl:h-[calc(100vh-12rem)]  bg-base-300 xl:flex-1">
+  <div class="flex flex-col w-full sm:flex-1 xl:flex-row">
+    <section id="active" class="card card-sm card-border h-[calc(100vh-8.829rem)] bg-base-300 xl:flex-1">
       <div class="card-body h-full">
-        <h3 class="card-title">Files</h3>
-        {#if data.active.length < 1}
+        <div class="flex w-full flex-row justify-between items-center">
+          <h3 class="card-title">Files</h3>
+          <div class="flex flex-row gap-2">
+            <button disabled={!data.active.has_previous_page} onclick={() => goto(`/canal/jetsam?page=${data.active.navigation[0]}&limit=10`)} class={`btn btn-outline btn-neutral btn-circle btn-sm`}>
+              <ChevronLeft />
+            </button>
+            <button disabled={!data.active.has_next_page} onclick={() => goto(`/canal/jetsam?page=${data.active.navigation[1]}&limit=10`)} class={`btn btn-outline btn-neutral btn-circle btn-sm`}>
+              <ChevronRight />
+            </button>
+          </div>
+        </div>
+        {#if data.active.results.length < 1}
           <figure class="w-full flex-1 items-center justify-center">
             <img class="sm:max-w-sm" src="/friends.svg" alt="An illustration a person sitting in a garden with their pet" />
           </figure>
         {:else}
           <div class="h-full overflow-y-auto w-full">
             <ul class="list bg-base-100 rounded-box shadow-md">
-              {#each data.active as cargo}
+              {#each data.active.results as cargo}
                 <li class="list-row">
                   <div>
                     <Icon typeInput={cargo.content_type} />
                   </div>
                   <div>
                     <div>{cargo.name}</div>
-                    <div class="text-xs uppercase font-semibold opacity-60">{size(cargo.size)}, {Math.floor( ( ( new Date(cargo.storage_valid_until).valueOf() - Date.now() ) / (1000 * 60 * 60 * 24)) )} days</div>
+                    <div class="text-xs uppercase font-semibold opacity-60">{size(cargo.size)}, {Math.floor( ( ( new Date(cargo.storage_valid_until).valueOf() - Date.now() ) / (1000 * 60 * 60 * 24)) )} days left</div>
                   </div>
                   <button onclick={() => {
                     cargo_info = {
@@ -431,7 +529,10 @@
                       downloads_left: cargo.downloads_total - cargo.downloads_count,
                       size: cargo.size,
                       drops: ( cargo.subpoints / 100 ).toFixed(2),
-                      id: cargo.id
+                      id: cargo.id,
+                      created_at: dateFormatter.format(new Date(cargo.created_at)),
+                      updated_at: dateFormatter.format(new Date(cargo.updated_at)),
+                      expires_at: dateFormatter.format(new Date(cargo.storage_valid_until))
                     }
                     openCargoModal()
                   }} class="btn btn-square btn-neutral">
@@ -441,13 +542,14 @@
               {/each}
             </ul>
           </div>
+          <span class="w-full text-center font-bold font-mono">Page {data.active.page_info}</span>
         {/if}
       </div>
     </section>
   </div>
 </div>
 <dialog bind:this={cargo_info_modal} class="modal modal-bottom sm:modal-middle">
-  <div class="modal-box bg-neutral text-base-100">
+  <div class="modal-box bg-accent text-neutral">
     <form method="dialog">
       <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-4.5">
         <CircleX />
@@ -455,8 +557,8 @@
     </form>
     <h3 class="text-lg font-bold uppercase">{cargo_info.type}</h3>
     {#if cargo_loading }
-      <div class="flex justify-center items-center h-50 sm:h-44 w-full">
-        <span class="loading loading-spinner text-base-100"></span>
+      <div class="flex justify-center items-center h-77 sm:h-71 w-full">
+        <span class="loading loading-spinner text-neutral"></span>
       </div>
     {:else}
       <div class="flex flex-col gap-3 mt-2 mb-4 w-full">
@@ -478,6 +580,18 @@
         <div class="flex flex-row w-full justify-between">
           <p class="w-1/3">Cost</p>
           <span class="flex-1">{cargo_info.drops} Drops</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Expires</p>
+          <span class="flex-1">{cargo_info.expires_at}</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Modified</p>
+          <span class="flex-1">{cargo_info.updated_at}</span>
+        </div>
+        <div class="flex flex-row w-full justify-between">
+          <p class="w-1/3">Created</p>
+          <span class="flex-1">{cargo_info.created_at}</span>
         </div>
       </div>
     {/if}

@@ -9,7 +9,7 @@
   }
 </script>
 
-<section class="card bg-base-200 min-h-[70vh] w-full">
+<section class="card bg-base-300 min-h-[calc(100vh-19.829rem)] sm:min-h-[calc(100vh-8.829rem)] w-full">
   <div class="card-body">
     <h2 class="card-title">Sessions</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 row-auto">

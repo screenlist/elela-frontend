@@ -8,6 +8,7 @@
   import { argon2id } from 'hash-wasm'
   import { decodeHex } from '@std/encoding'
   import { computeHMAC } from '$lib/hmac.js'
+  import { hashAuthenticationPass } from '$lib/encryption.js'
 
   let { data } = $props()
 
@@ -37,21 +38,13 @@
     loading = true
     const phrase = diceware()
     const salt = decodeHex(data.passphrase_salt)
-    const key = await argon2id({
-      password: phrase,
-      salt: salt,
-      memorySize: 64000,
-      iterations: 3,
-      hashLength: 32,
-      outputType: 'hex',
-      parallelism: 1
-    })
-    const hmac = await computeHMAC(key, 'canal-passphrase')
+    const hash = await hashAuthenticationPass(phrase, salt)
+    
     const res = await fetch(`${PUBLIC_SERVER}/canal/activate`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        hash: hmac,
+        hash: hash,
         sequence: data.letter_sequence
       })
     })
@@ -74,23 +67,19 @@
   })
 </script>
 
-<div class="flex flex-col justify-items-start items-center p-4">
-  <section class="card card-border bg-base-200  max-w-xl w-full min-w-xs">
+<div class="flex flex-col justify-items-start items-center">
+  <section class="card card-border bg-base-300  max-w-sm w-full">
     <div class="card-body items-center text-center">
-      <h1 class="card-title uppercase">Canal <span class="badge badge-neutral">{data.letter_sequence}</span></h1>
+      <h1 class="card-title uppercase">Canal</h1>
       <div role="alert" class="alert alert-warning w-full">
-        <Info />
-        <span>Do not refresh this page.</span>
+        <span>Do not refresh this page. These details will only be displayed once, they cannot be reset, click save & never lose them.</span>
       </div>
-      <div role="alert" class="alert alert-warning w-full">
-        <Info />
-        <span>These details will only be displayed once, click save.</span>
-      </div>
-      <div role="alert" class="alert alert-info w-full">
-        <Info />
-        <span>This information cannot be reset, never lose it.</span>
-      </div>
-      <span class="font-mono w-full m-4 p-6 bg-base-300 font-semibold text-base border-dashed border-1 rounded-lg border-neutral">
+      <h2 class="font-bold mt-4 w-full text-left">Sequence</h2>
+      <span class="font-mono w-full p-2 bg-base-200 font-semibold text-base border-dashed border-1 rounded-lg border-neutral">
+        {data.letter_sequence}
+      </span>
+      <h2 class="font-bold mt-4 w-full text-left">Passphrase</h2>
+      <span class="font-mono w-full p-6 bg-base-200 font-semibold text-base border-dashed border-1 rounded-lg border-neutral">
         {#if loading || !passphrase}
           <div class="flex justify-center items-center w-full">
             <span class="loading loading-spinner text-neutral"></span>
@@ -100,13 +89,13 @@
         {/if}
       </span>
       <div class="card-actions justify-evenly w-full">
-        <button disable={!loading || passphrase ? false : true} onclick={saveCanal} class="btn btn-accent mt-4 flex-1">Save</button>
+        <button disable={!loading || passphrase ? false : true} onclick={saveCanal} class="btn btn-primary mt-4 flex-1">Save</button>
         <a href="/" class="btn btn-outline mt-4 flex-1">Enter</a>
       </div>
     </div>
   </section>
 </div>
-<div class="toast toast-bottom toast-center">
+<div class="toast toast-top toast-center">
   {#each toasts as toast (toast.id) }
     <div class={`alert alert-${toast.type}`}>
       <span>{toast.message}</span>
