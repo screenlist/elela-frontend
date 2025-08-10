@@ -90,25 +90,23 @@
 </script>
 
 <svelte:head>
-	<title>Elela - Encrypted anonymous file storage & meetings</title>
+	<title>Elela - Anonymous file storage & meetings app</title>
 	<meta name="description" content="Encrypted anonymous private file storage & scheduled meetings with no email, no subscriptions, and no trail." />
 
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="Elela - Encrypted anonymous file storage & meetings" />
+	<meta name="twitter:title" content="Elela - Anonymous file storage & meetings app" />
 	<meta name="twitter:description" content="Encrypted anonymous private file storage & scheduled meetings with no email, no subscriptions, and no trail." />
-	<meta name="twitter:image" content="/elela-display-art.webp" />
+	<meta name="twitter:image" content="/elela-minimal-display.webp" />
 
-	<meta property="og:title" content="Elela - Encrypted anonymous file storage & meetings" />
+	<meta property="og:title" content="Elela - Anonymous file storage & meetings app" />
 	<meta property="og:description" content="Encrypted anonymous private file storage & scheduled meetings with no email, no subscriptions, and no trail." />
-	<meta property="og:image" content="/elela-display-art.webp" />
+	<meta property="og:image" content="/elela-minimal-display.webp" />
 	<meta property="og:image:width" content="1920" />
 	<meta property="og:image:height" content="1920" />
 	<meta property="og:url" content={`${PUBLIC_CLIENT}`} />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="Elela" />
 	<meta property="og:locale" content="en_ZA" />
-
-	<meta name="keywords" content="anonymous chat, encrypted file storage, ephemeral chat, no email, no subscription storage" />
 </svelte:head>
 
 {#if !page.url.pathname.startsWith('/bridge/')}
