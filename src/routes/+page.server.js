@@ -5,7 +5,7 @@ import { decodeJwt } from 'jose'
 
 export async function load({ cookies, url, request }){
   const token = cookies.get('access_token')
-
+  console.log(getClientAddress(), request.headers.get('x-real-ip'), request.headers.get('x-forwarded-for'))
   if(token){
     const claims = decodeJwt(token)
     const valid = await fetch(`${PUBLIC_SERVER}/canal/session/poll?id=${claims.sid}`)
