@@ -3,7 +3,7 @@ import { z }  from 'zod'
 import { PUBLIC_SERVER, PUBLIC_APP_ENV, PUBLIC_COOKIE_DOMAIN } from '$env/static/public'
 import { decodeJwt } from 'jose'
 
-export async function load({ cookies, url, request }){
+export async function load({ cookies, url, request, getClientAddress }){
   const token = cookies.get('access_token')
   console.log(getClientAddress(), request.headers.get('x-real-ip'), request.headers.get('x-forwarded-for'))
   if(token){
